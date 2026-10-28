@@ -31,4 +31,4 @@ app/src/test/  JUnit tests for core/
 - CI runs on `pull_request` only (plus manual dispatch); no duplicate `push:` trigger.
 - One job; new checks are steps in it. Keep `concurrency` + `cancel-in-progress`, `timeout-minutes`,
   and `permissions: contents: read`.
-- APKs ship via GitHub Releases (release.yml, when a GitHub Release is published), never as long-lived artifacts.
+- APKs ship via GitHub Releases (release.yml, when a GitHub Release is published or a `release/v*` branch is pushed), never as long-lived artifacts.
