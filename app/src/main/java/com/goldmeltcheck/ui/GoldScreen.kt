@@ -102,6 +102,11 @@ fun GoldScreen(vm: GoldViewModel = viewModel()) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Text(
+                "Gold price from gold-api.com. Rates by Exchange Rate API (exchangerate-api.com).",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

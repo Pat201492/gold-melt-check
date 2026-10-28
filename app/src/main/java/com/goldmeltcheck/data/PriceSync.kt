@@ -11,6 +11,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -34,9 +35,14 @@ class PriceSyncWorker(context: Context, params: WorkerParameters) : CoroutineWor
         store.recordAttempt(now, errors.takeIf { it.isNotEmpty() }?.joinToString("\n"))
         when {
             errors.isEmpty() -> Result.success()
-            runAttemptCount < 2 -> Result.retry()
+            // A tap on "Refresh now" should fail fast and show why; background syncs retry quietly.
+            !inputData.getBoolean(KEY_MANUAL, false) && runAttemptCount < 2 -> Result.retry()
             else -> Result.failure()
         }
+    }
+
+    companion object {
+        const val KEY_MANUAL = "manual"
     }
 }
 
@@ -65,7 +71,10 @@ object PriceSync {
 
     /** The "Refresh now" button: the person asked, so any connection is fine. */
     fun refreshNow(context: Context) {
-        val request = OneTimeWorkRequestBuilder<PriceSyncWorker>().setConstraints(anyNetwork).build()
+        val request = OneTimeWorkRequestBuilder<PriceSyncWorker>()
+            .setConstraints(anyNetwork)
+            .setInputData(workDataOf(PriceSyncWorker.KEY_MANUAL to true))
+            .build()
         WorkManager.getInstance(context).enqueueUniqueWork(MANUAL, ExistingWorkPolicy.REPLACE, request)
     }
 

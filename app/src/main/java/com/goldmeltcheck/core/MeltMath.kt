@@ -62,9 +62,14 @@ object MeltMath {
         val normalized = when {
             lastComma >= 0 && lastDot >= 0 ->
                 if (lastComma > lastDot) t.replace(".", "").replace(',', '.') else t.replace(",", "")
-            lastComma >= 0 ->
-                // A lone comma followed by exactly three digits reads as a thousands separator.
-                if (t.count { it == ',' } == 1 && t.length - lastComma - 1 != 3) t.replace(',', '.') else t.replace(",", "")
+            lastComma >= 0 -> {
+                // A lone comma is a decimal point, unless exactly three digits follow a non-zero
+                // whole part ("1,500"), which reads as a thousands separator. "0,750" is 0.75.
+                val whole = t.substring(0, lastComma).trimStart('-')
+                val isDecimal = t.count { it == ',' } == 1 &&
+                    (t.length - lastComma - 1 != 3 || whole.isEmpty() || whole.all { it == '0' })
+                if (isDecimal) t.replace(',', '.') else t.replace(",", "")
+            }
             else -> t
         }
         return normalized.toDoubleOrNull()?.takeIf { it.isFinite() }
