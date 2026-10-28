@@ -1,10 +1,11 @@
 name: Release
 
-# Push a tag like v0.1.0 to build a signed APK and attach it to a GitHub Release.
+# Publishing a GitHub Release (tag like v0.1.0) builds a signed APK and attaches it to that release.
+# Create the release from the GitHub app or website: Releases -> Draft a new release -> new tag -> Publish.
 # Releases don't count against Actions storage, so no artifact is uploaded.
 on:
-  push:
-    tags: ["v*"]
+  release:
+    types: [published]
 
 permissions:
   contents: write
@@ -44,7 +45,7 @@ jobs:
           ./gradlew --no-daemon testDebugUnitTest assembleRelease \
             -PversionName="$VERSION" -PversionCode="${{ github.run_number }}"
           cp app/build/outputs/apk/release/app-release.apk "gold-melt-check-$VERSION.apk"
-      - name: Publish GitHub Release
+      - name: Attach APK to the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" "gold-melt-check-${GITHUB_REF_NAME#v}.apk" --title "$GITHUB_REF_NAME" --generate-notes
+        run: gh release upload "$GITHUB_REF_NAME" "gold-melt-check-${GITHUB_REF_NAME#v}.apk" --clobber
