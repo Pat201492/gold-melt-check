@@ -44,11 +44,12 @@ unit tested.
 
 ### Cutting a release
 
-```bash
-git tag v0.1.0 && git push origin v0.1.0
-```
+On GitHub (the website or the mobile app): **Releases → Draft a new release**, type a new tag such as
+`v0.1.0`, then **Publish release**. The **Release** workflow tests, builds a signed APK, and attaches
+it to that release within about 5 minutes.
 
-The **Release** workflow tests, builds a signed APK, and attaches it to a GitHub Release.
+From a terminal, pushing a branch does the same and creates the release for you:
+`git push origin main:release/v0.1.0`.
 
 ### One-time: signing key
 
