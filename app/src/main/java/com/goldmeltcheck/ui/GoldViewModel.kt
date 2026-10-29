@@ -42,9 +42,9 @@ class GoldViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun result(p: PriceSnapshot): MeltResult? = MeltMath.evaluate(
-        grams = MeltMath.parseAmount(inputs.grams),
+        grams = MeltMath.parseAmount(inputs.grams, phoneDecimal()),
         purity = Catalog.purities.getOrElse(inputs.purityIndex) { Catalog.purities[Catalog.DEFAULT_PURITY_INDEX] }.fineness,
-        price = MeltMath.parseAmount(inputs.price),
+        price = MeltMath.parseAmount(inputs.price, phoneDecimal()),
         unitsPerUsd = p.effectiveRate(inputs.currency),
         spotUsdPerOz = p.effectiveSpot,
     )
