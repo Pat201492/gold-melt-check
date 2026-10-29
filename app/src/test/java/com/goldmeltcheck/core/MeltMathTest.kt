@@ -38,6 +38,16 @@ class MeltMathTest {
         assertEquals(75.0, MeltMath.goldPricePerGram(spot, 1.0, purity = 0.75), 1e-9)
     }
 
+    @Test fun convertsBetweenAnyTwoCurrencies() {
+        // USD -> EUR at 0.86 EUR per USD
+        assertEquals(0.86, MeltMath.convert(1.0, 1.0, 0.86), 1e-12)
+        // EUR -> GBP goes through USD: 100 EUR = 100/0.86 USD = 87.209... GBP at 0.75
+        assertEquals(100 / 0.86 * 0.75, MeltMath.convert(100.0, 0.86, 0.75), 1e-9)
+        // Same currency is unchanged; round trip returns the start
+        assertEquals(42.0, MeltMath.convert(42.0, 151.2, 151.2), 1e-12)
+        assertEquals(42.0, MeltMath.convert(MeltMath.convert(42.0, 0.86, 151.2), 151.2, 0.86), 1e-9)
+    }
+
     @Test fun verdictBands() {
         assertEquals(Verdict.BELOW_MELT, MeltMath.verdictFor(99.9))
         assertEquals(Verdict.NEAR_MELT, MeltMath.verdictFor(100.0))

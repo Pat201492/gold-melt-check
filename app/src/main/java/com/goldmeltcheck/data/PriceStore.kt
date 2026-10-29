@@ -30,6 +30,8 @@ class PriceStore(context: Context) {
         val inGrams = stringPreferencesKey("input_grams")
         val inPurity = intPreferencesKey("input_purity")
         val inPrice = stringPreferencesKey("input_price")
+        val convertFrom = stringPreferencesKey("convert_from")
+        val convertAmount = stringPreferencesKey("convert_amount")
     }
 
     val snapshot: Flow<PriceSnapshot> = store.data.map { p ->
@@ -53,6 +55,8 @@ class PriceStore(context: Context) {
             grams = p[Keys.inGrams] ?: d.grams,
             purityIndex = p[Keys.inPurity] ?: d.purityIndex,
             price = p[Keys.inPrice] ?: d.price,
+            convertFrom = p[Keys.convertFrom] ?: d.convertFrom,
+            convertAmount = p[Keys.convertAmount] ?: d.convertAmount,
         )
     }
 
@@ -86,6 +90,8 @@ class PriceStore(context: Context) {
         it[Keys.inGrams] = inputs.grams
         it[Keys.inPurity] = inputs.purityIndex
         it[Keys.inPrice] = inputs.price
+        it[Keys.convertFrom] = inputs.convertFrom
+        it[Keys.convertAmount] = inputs.convertAmount
     }
 
     private fun encode(map: Map<String, Double>): String = JSONObject(map as Map<*, *>).toString()

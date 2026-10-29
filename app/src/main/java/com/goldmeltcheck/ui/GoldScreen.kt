@@ -76,7 +76,7 @@ internal const val STALE_AFTER_MS = 24 * 60 * 60 * 1000L
 fun phoneDecimal(): Char = DecimalFormatSymbols.getInstance().decimalSeparator
 
 /** Echoes a typed amount back in the phone's own format, so a misread is visible at a glance. */
-private fun readBack(text: String, unit: String, maxDecimals: Int): String? {
+internal fun readBack(text: String, unit: String, maxDecimals: Int): String? {
     if (text.isBlank()) return null
     val v = MeltMath.parseAmount(text, phoneDecimal()) ?: return "Not a number"
     val nf = NumberFormat.getNumberInstance().apply {
@@ -374,7 +374,7 @@ private fun OverrideField(
 }
 
 @Composable
-private fun NumberField(
+internal fun NumberField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
@@ -397,7 +397,7 @@ private fun NumberField(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Picker(
+internal fun Picker(
     label: String,
     options: List<String>,
     selected: Int,

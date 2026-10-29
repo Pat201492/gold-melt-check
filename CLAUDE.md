@@ -9,7 +9,7 @@ and shows it as a percent of melt value. See README.md for the user-facing behav
 app/src/main/java/com/goldmeltcheck/
   core/   pure Kotlin: MeltMath, Catalog (currencies, purities), PriceParsers. No Android imports.
   data/   PriceStore (DataStore cache), PriceApi (HTTP), PriceSync (WorkManager)
-  ui/     GoldScreen (Check tab), RatesScreen (Rates tab), GoldViewModel, Theme
+  ui/     GoldScreen (Check), RatesScreen (Gold Rates), CurrencyScreen (Currency Rates), GoldViewModel, Theme
 app/src/test/  JUnit tests for core/
 ```
 
