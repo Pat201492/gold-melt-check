@@ -30,6 +30,14 @@ class MeltMathTest {
         assertEquals(150.0, r.usdPerGram, 1e-9)
     }
 
+    @Test fun goldPricePerGramInAnyCurrency() {
+        // $3110.34768/oz is exactly $100 per gram of pure gold
+        val spot = GRAMS_PER_TROY_OUNCE * 100
+        assertEquals(100.0, MeltMath.goldPricePerGram(spot, 1.0), 1e-9)
+        assertEquals(86.0, MeltMath.goldPricePerGram(spot, 0.86), 1e-9)
+        assertEquals(75.0, MeltMath.goldPricePerGram(spot, 1.0, purity = 0.75), 1e-9)
+    }
+
     @Test fun verdictBands() {
         assertEquals(Verdict.BELOW_MELT, MeltMath.verdictFor(99.9))
         assertEquals(Verdict.NEAR_MELT, MeltMath.verdictFor(100.0))

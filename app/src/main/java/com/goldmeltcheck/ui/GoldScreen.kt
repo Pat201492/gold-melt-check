@@ -5,18 +5,18 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -69,8 +69,8 @@ import java.text.NumberFormat
 import java.util.Locale
 
 private val usdFormat: NumberFormat = NumberFormat.getCurrencyInstance(Locale.US)
-private fun usd(v: Double): String = usdFormat.format(v)
-private const val STALE_AFTER_MS = 24 * 60 * 60 * 1000L
+internal fun usd(v: Double): String = usdFormat.format(v)
+internal const val STALE_AFTER_MS = 24 * 60 * 60 * 1000L
 
 /** The phone's decimal separator ("." in the US, "," in much of Europe). Breaks ties in parsing. */
 fun phoneDecimal(): Char = DecimalFormatSymbols.getInstance().decimalSeparator
@@ -86,8 +86,9 @@ private fun readBack(text: String, unit: String, maxDecimals: Int): String? {
     return "= ${nf.format(v)} $unit"
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun GoldScreen(vm: GoldViewModel = viewModel()) {
+fun GoldScreen(vm: GoldViewModel = viewModel(), contentPadding: PaddingValues = PaddingValues()) {
     val prices by vm.prices.collectAsStateWithLifecycle()
     val refreshing by vm.refreshing.collectAsStateWithLifecycle()
     val result = vm.result(prices)
@@ -95,7 +96,8 @@ fun GoldScreen(vm: GoldViewModel = viewModel()) {
     Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(contentPadding)
+                .consumeWindowInsets(contentPadding)
                 .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 20.dp),
@@ -127,7 +129,7 @@ fun GoldScreen(vm: GoldViewModel = viewModel()) {
 }
 
 @Composable
-private fun Panel(container: Color = MaterialTheme.colorScheme.surface, content: @Composable () -> Unit) {
+internal fun Panel(container: Color = MaterialTheme.colorScheme.surface, content: @Composable () -> Unit) {
     Surface(
         color = container,
         shape = RoundedCornerShape(14.dp),
@@ -139,7 +141,7 @@ private fun Panel(container: Color = MaterialTheme.colorScheme.surface, content:
 }
 
 @Composable
-private fun Eyebrow(text: String) = Text(
+internal fun Eyebrow(text: String) = Text(
     text.uppercase(),
     style = MaterialTheme.typography.labelMedium,
     letterSpacing = 1.sp,
@@ -421,7 +423,7 @@ private fun Picker(
     }
 }
 
-private fun relative(at: Long, now: Long): String =
+internal fun relative(at: Long, now: Long): String =
     if (now - at < DateUtils.MINUTE_IN_MILLIS) "just now"
     else DateUtils.getRelativeTimeSpanString(at, now, DateUtils.MINUTE_IN_MILLIS).toString()
 
