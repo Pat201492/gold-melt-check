@@ -7,9 +7,10 @@ and shows it as a percent of melt value. See README.md for the user-facing behav
 
 ```
 app/src/main/java/com/goldmeltcheck/
-  core/   pure Kotlin: MeltMath, Catalog (currencies, purities), PriceParsers. No Android imports.
+  core/   pure Kotlin: MeltMath, Catalog (currencies, purities), PriceParsers, GemMath, Gems
+          (lab-grown signs + dated price ballparks). No Android imports.
   data/   PriceStore (DataStore cache), PriceApi (HTTP), PriceSync (WorkManager)
-  ui/     GoldScreen (Check), RatesScreen (Gold Rates), CurrencyScreen (Currency Rates), GoldViewModel, Theme
+  ui/     GoldScreen (Check), RatesScreen (Gold Rates), CurrencyScreen (Currency Rates), GemsScreen (Gems), GoldViewModel, Theme
 app/src/test/  JUnit tests for core/
 ```
 
@@ -21,6 +22,8 @@ app/src/test/  JUnit tests for core/
 - Keep `core/` free of Android imports so it stays unit-testable on the JVM. New math goes there, with tests.
 - Price sources must be free and keyless. If one changes shape, fix `PriceParsers` and its tests together.
 - Never show a bundled estimate as live: anything not fetched is labelled as an estimate or the user's number.
+- Gem price ballparks are static and dated (`Gems.PRICES_AS_OF`); keep the date current whenever you change them,
+  and leave a range null rather than guess one. Lab-grown signs are hints, never presented as proof.
 
 ## Checks
 
