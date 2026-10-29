@@ -46,18 +46,31 @@ class MeltMathTest {
         assertNull(MeltMath.evaluate(1.0, 1.0, 1.0, 1.0, null))
     }
 
-    @Test fun parsesTypedAmounts() {
-        assertEquals(1500.0, MeltMath.parseAmount("1500")!!, 0.0)
-        assertEquals(1500.0, MeltMath.parseAmount("1,500")!!, 0.0)
-        assertEquals(1234.5, MeltMath.parseAmount("1,234.5")!!, 0.0)
-        assertEquals(1234.5, MeltMath.parseAmount("1.234,5")!!, 0.0)
-        assertEquals(12.5, MeltMath.parseAmount(" 12,5 ")!!, 0.0)
-        assertEquals(0.75, MeltMath.parseAmount("0,750")!!, 0.0)
-        assertEquals(0.75, MeltMath.parseAmount(",750")!!, 0.0)
-        assertEquals(10000.0, MeltMath.parseAmount("10,000")!!, 0.0)
-        assertEquals(1234567.0, MeltMath.parseAmount("1,234,567")!!, 0.0)
-        assertEquals(0.86, MeltMath.parseAmount("0.86")!!, 0.0)
-        assertNull(MeltMath.parseAmount(""))
-        assertNull(MeltMath.parseAmount("abc"))
+    @Test fun parsesUnambiguousAmountsTheSameEverywhere() {
+        for (phone in listOf('.', ',')) {
+            assertEquals(1500.0, MeltMath.parseAmount("1500", phone)!!, 0.0)
+            assertEquals(1234.5, MeltMath.parseAmount("1,234.5", phone)!!, 0.0)
+            assertEquals(1234.5, MeltMath.parseAmount("1.234,5", phone)!!, 0.0)
+            assertEquals(1234567.0, MeltMath.parseAmount("1,234,567", phone)!!, 0.0)
+            assertEquals(1234567.0, MeltMath.parseAmount("1.234.567", phone)!!, 0.0)
+            assertEquals(12.5, MeltMath.parseAmount(" 12,5 ", phone)!!, 0.0)
+            assertEquals(12.5, MeltMath.parseAmount("12.5", phone)!!, 0.0)
+            assertEquals(0.75, MeltMath.parseAmount("0,750", phone)!!, 0.0)
+            assertEquals(0.75, MeltMath.parseAmount("0.750", phone)!!, 0.0)
+            assertEquals(0.75, MeltMath.parseAmount(",750", phone)!!, 0.0)
+            assertEquals(1.2345, MeltMath.parseAmount("1,2345", phone)!!, 0.0)
+            assertNull(MeltMath.parseAmount("", phone))
+            assertNull(MeltMath.parseAmount("abc", phone))
+        }
+    }
+
+    @Test fun phoneSettingDecidesTheAmbiguousCase() {
+        // US-style phone: comma groups thousands, dot is decimal
+        assertEquals(1500.0, MeltMath.parseAmount("1,500", '.')!!, 0.0)
+        assertEquals(1.5, MeltMath.parseAmount("1.500", '.')!!, 0.0)
+        // European-style phone: the reverse
+        assertEquals(1.5, MeltMath.parseAmount("1,500", ',')!!, 0.0)
+        assertEquals(1500.0, MeltMath.parseAmount("1.500", ',')!!, 0.0)
+        assertEquals(10000.0, MeltMath.parseAmount("10.000", ',')!!, 0.0)
     }
 }

@@ -64,12 +64,27 @@ import com.goldmeltcheck.data.PriceSnapshot
 import kotlinx.coroutines.delay
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.text.DecimalFormatSymbols
 import java.text.NumberFormat
 import java.util.Locale
 
 private val usdFormat: NumberFormat = NumberFormat.getCurrencyInstance(Locale.US)
 private fun usd(v: Double): String = usdFormat.format(v)
 private const val STALE_AFTER_MS = 24 * 60 * 60 * 1000L
+
+/** The phone's decimal separator ("." in the US, "," in much of Europe). Breaks ties in parsing. */
+fun phoneDecimal(): Char = DecimalFormatSymbols.getInstance().decimalSeparator
+
+/** Echoes a typed amount back in the phone's own format, so a misread is visible at a glance. */
+private fun readBack(text: String, unit: String, maxDecimals: Int): String? {
+    if (text.isBlank()) return null
+    val v = MeltMath.parseAmount(text, phoneDecimal()) ?: return "Not a number"
+    val nf = NumberFormat.getNumberInstance().apply {
+        minimumFractionDigits = 0
+        maximumFractionDigits = maxDecimals
+    }
+    return "= ${nf.format(v)} $unit"
+}
 
 @Composable
 fun GoldScreen(vm: GoldViewModel = viewModel()) {
@@ -148,6 +163,7 @@ private fun InputsCard(vm: GoldViewModel) {
                 value = inputs.grams,
                 suffix = "g",
                 onValueChange = { v -> vm.update { it.copy(grams = v) } },
+                supporting = readBack(inputs.grams, "g", 3),
                 modifier = Modifier.weight(1f),
             )
             Picker(
@@ -163,6 +179,7 @@ private fun InputsCard(vm: GoldViewModel) {
             value = inputs.price,
             suffix = inputs.currency,
             onValueChange = { v -> vm.update { it.copy(price = v) } },
+            supporting = readBack(inputs.price, inputs.currency, 2),
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -348,7 +365,7 @@ private fun OverrideField(
         value = text,
         onValueChange = {
             text = it
-            onEdit(MeltMath.parseAmount(it))
+            onEdit(MeltMath.parseAmount(it, phoneDecimal()))
         },
         modifier = Modifier.fillMaxWidth().onFocusChanged { focused = it.isFocused },
     )
@@ -361,6 +378,7 @@ private fun NumberField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     suffix: String? = null,
+    supporting: String? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -368,6 +386,7 @@ private fun NumberField(
         label = { Text(label) },
         singleLine = true,
         suffix = suffix?.let { { Text(it, fontFamily = FontFamily.Monospace) } },
+        supportingText = supporting?.let { { Text(it, fontFamily = FontFamily.Monospace) } },
         textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Monospace),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         modifier = modifier,
@@ -406,5 +425,7 @@ private fun relative(at: Long, now: Long): String =
     if (now - at < DateUtils.MINUTE_IN_MILLIS) "just now"
     else DateUtils.getRelativeTimeSpanString(at, now, DateUtils.MINUTE_IN_MILLIS).toString()
 
+/** Plain digits with the phone's decimal separator and no grouping, so it parses back unchanged. */
 private fun trim(v: Double, decimals: Int): String =
     BigDecimal(v).setScale(decimals, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString()
+        .replace('.', phoneDecimal())
