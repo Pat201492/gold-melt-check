@@ -8,6 +8,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.materialIcon
+import androidx.compose.material.icons.materialPath
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -17,12 +19,37 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.goldmeltcheck.ui.CurrencyScreen
+import com.goldmeltcheck.ui.GemsScreen
 import com.goldmeltcheck.ui.GoldScreen
 import com.goldmeltcheck.ui.GoldTheme
 import com.goldmeltcheck.ui.GoldViewModel
 import com.goldmeltcheck.ui.RatesScreen
+
+/** A cut-gem outline: flat table on top, pointed culet below. The core icon set has none. */
+private val GemIcon: ImageVector = materialIcon(name = "Gem") {
+    materialPath {
+        moveTo(6f, 3f)
+        lineTo(18f, 3f)
+        lineTo(22f, 9f)
+        lineTo(12f, 21f)
+        lineTo(2f, 9f)
+        close()
+    }
+}
+
+private data class Tab(val label: String, val icon: ImageVector)
+
+private val tabs = listOf(
+    Tab("Check", Icons.Filled.CheckCircle),
+    Tab("Gold Rates", Icons.Filled.Star),
+    Tab("Currency Rates", Icons.Filled.Refresh),
+    Tab("Gems", GemIcon),
+)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,24 +62,17 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     bottomBar = {
                         NavigationBar {
-                            NavigationBarItem(
-                                selected = tab == 0,
-                                onClick = { tab = 0 },
-                                icon = { Icon(Icons.Filled.CheckCircle, contentDescription = null) },
-                                label = { Text("Check") },
-                            )
-                            NavigationBarItem(
-                                selected = tab == 1,
-                                onClick = { tab = 1 },
-                                icon = { Icon(Icons.Filled.Star, contentDescription = null) },
-                                label = { Text("Gold Rates") },
-                            )
-                            NavigationBarItem(
-                                selected = tab == 2,
-                                onClick = { tab = 2 },
-                                icon = { Icon(Icons.Filled.Refresh, contentDescription = null) },
-                                label = { Text("Currency Rates") },
-                            )
+                            tabs.forEachIndexed { i, t ->
+                                NavigationBarItem(
+                                    selected = tab == i,
+                                    onClick = { tab = i },
+                                    icon = { Icon(t.icon, contentDescription = null) },
+                                    label = {
+                                        Text(t.label, fontSize = 11.sp, maxLines = 2, textAlign = TextAlign.Center,
+                                            lineHeight = 13.sp)
+                                    },
+                                )
+                            }
                         }
                     },
                 ) { padding ->
@@ -62,7 +82,8 @@ class MainActivity : ComponentActivity() {
                             vm.update { it.copy(currency = code) }
                             tab = 0
                         })
-                        else -> CurrencyScreen(vm, padding)
+                        2 -> CurrencyScreen(vm, padding)
+                        else -> GemsScreen(vm, padding)
                     }
                 }
             }

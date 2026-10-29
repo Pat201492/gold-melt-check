@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.goldmeltcheck.core.PriceRange
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.json.JSONObject
@@ -32,6 +33,11 @@ class PriceStore(context: Context) {
         val inPrice = stringPreferencesKey("input_price")
         val convertFrom = stringPreferencesKey("convert_from")
         val convertAmount = stringPreferencesKey("convert_amount")
+        val gemId = stringPreferencesKey("gem_id")
+        val gemPrice = stringPreferencesKey("gem_price")
+        val gemCurrency = stringPreferencesKey("gem_currency")
+        val gemCarats = stringPreferencesKey("gem_carats")
+        val gemRanges = stringPreferencesKey("gem_range_overrides")
     }
 
     val snapshot: Flow<PriceSnapshot> = store.data.map { p ->
@@ -57,6 +63,10 @@ class PriceStore(context: Context) {
             price = p[Keys.inPrice] ?: d.price,
             convertFrom = p[Keys.convertFrom] ?: d.convertFrom,
             convertAmount = p[Keys.convertAmount] ?: d.convertAmount,
+            gemId = p[Keys.gemId] ?: d.gemId,
+            gemPrice = p[Keys.gemPrice] ?: d.gemPrice,
+            gemCurrency = p[Keys.gemCurrency] ?: d.gemCurrency,
+            gemCarats = p[Keys.gemCarats] ?: d.gemCarats,
         )
     }
 
@@ -92,6 +102,34 @@ class PriceStore(context: Context) {
         it[Keys.inPrice] = inputs.price
         it[Keys.convertFrom] = inputs.convertFrom
         it[Keys.convertAmount] = inputs.convertAmount
+        it[Keys.gemId] = inputs.gemId
+        it[Keys.gemPrice] = inputs.gemPrice
+        it[Keys.gemCurrency] = inputs.gemCurrency
+        it[Keys.gemCarats] = inputs.gemCarats
+    }
+
+    /** Price ranges the person edited, keyed "gemId:natural" or "gemId:lab". */
+    val gemRangeOverrides: Flow<Map<String, PriceRange>> = store.data.map { p ->
+        decodeRanges(p[Keys.gemRanges])
+    }
+
+    suspend fun setGemRange(key: String, range: PriceRange?) = store.edit { p ->
+        val current = decodeRanges(p[Keys.gemRanges]).toMutableMap()
+        if (range == null) current.remove(key) else current[key] = range
+        val json = JSONObject()
+        current.forEach { (k, r) -> json.put(k, org.json.JSONArray(listOf(r.low, r.high))) }
+        p[Keys.gemRanges] = json.toString()
+    }
+
+    private fun decodeRanges(raw: String?): Map<String, PriceRange> {
+        if (raw.isNullOrEmpty()) return emptyMap()
+        return runCatching {
+            val json = JSONObject(raw)
+            json.keys().asSequence().associateWith { k ->
+                val a = json.getJSONArray(k)
+                PriceRange(a.getDouble(0), a.getDouble(1))
+            }
+        }.getOrDefault(emptyMap())
     }
 
     private fun encode(map: Map<String, Double>): String = JSONObject(map as Map<*, *>).toString()

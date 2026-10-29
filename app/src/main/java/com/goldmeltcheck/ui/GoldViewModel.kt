@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.goldmeltcheck.core.Catalog
 import com.goldmeltcheck.core.MeltMath
 import com.goldmeltcheck.core.MeltResult
+import com.goldmeltcheck.core.PriceRange
 import com.goldmeltcheck.data.PriceSnapshot
 import com.goldmeltcheck.data.PriceStore
 import com.goldmeltcheck.data.PriceSync
@@ -27,6 +28,11 @@ class GoldViewModel(app: Application) : AndroidViewModel(app) {
 
     val refreshing: StateFlow<Boolean> =
         PriceSync.manualRefreshPending(app).stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    val gemRangeOverrides: StateFlow<Map<String, PriceRange>> =
+        store.gemRangeOverrides.stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+
+    fun setGemRange(key: String, range: PriceRange?) = viewModelScope.launch { store.setGemRange(key, range) }
 
     var inputs by mutableStateOf(SavedInputs())
         private set

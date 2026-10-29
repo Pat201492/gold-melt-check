@@ -31,4 +31,8 @@ data class SavedInputs(
     val price: String = "1500",
     val convertFrom: String = "USD",
     val convertAmount: String = "1",
+    val gemId: String = "diamond",
+    val gemPrice: String = "1000",
+    val gemCurrency: String = "USD",
+    val gemCarats: String = "1",
 )
