@@ -64,7 +64,7 @@ fun RatesScreen(vm: GoldViewModel, contentPadding: PaddingValues, onPick: (Strin
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Column {
-                Text("Rates", fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                Text("Gold Rates", fontSize = 30.sp, fontWeight = FontWeight.Bold)
                 Text(
                     "Gold and exchange rates saved on this phone. Tap a currency to use it in the calculator.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -121,7 +121,7 @@ fun RatesScreen(vm: GoldViewModel, contentPadding: PaddingValues, onPick: (Strin
 }
 
 @Composable
-private fun Status(label: String, fetchedAt: Long, overridden: Boolean, now: Long) {
+internal fun Status(label: String, fetchedAt: Long, overridden: Boolean, now: Long) {
     val colors = LocalVerdictColors.current
     val (text, tone) = when {
         overridden -> "$label: your number" to MaterialTheme.colorScheme.onSurfaceVariant
@@ -185,7 +185,7 @@ private fun RatesTable(p: PriceSnapshot, selected: String, onPick: (String) -> U
 }
 
 @Composable
-private fun HeaderCell(text: String, modifier: Modifier, align: TextAlign) = Text(
+internal fun HeaderCell(text: String, modifier: Modifier, align: TextAlign) = Text(
     text.uppercase(),
     modifier = modifier,
     textAlign = align,

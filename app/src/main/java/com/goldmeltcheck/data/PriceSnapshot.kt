@@ -29,4 +29,6 @@ data class SavedInputs(
     val grams: String = "10",
     val purityIndex: Int = Catalog.DEFAULT_PURITY_INDEX,
     val price: String = "1500",
+    val convertFrom: String = "USD",
+    val convertAmount: String = "1",
 )
