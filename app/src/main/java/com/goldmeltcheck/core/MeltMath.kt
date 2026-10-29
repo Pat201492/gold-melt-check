@@ -46,6 +46,10 @@ object MeltMath {
         )
     }
 
+    /** Price of one gram at [purity] in a currency, from spot (USD/oz) and that currency's units per USD. */
+    fun goldPricePerGram(spotUsdPerOz: Double, unitsPerUsd: Double, purity: Double = 1.0): Double =
+        spotUsdPerOz / GRAMS_PER_TROY_OUNCE * purity * unitsPerUsd
+
     fun verdictFor(percentOfMelt: Double): Verdict = when {
         percentOfMelt < 100 -> Verdict.BELOW_MELT
         percentOfMelt <= 108 -> Verdict.NEAR_MELT
