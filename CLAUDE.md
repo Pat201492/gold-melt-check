@@ -1,16 +1,16 @@
 # Gold Melt Check — working notes
 
-Android app (Kotlin, Jetpack Compose, Material 3) that converts a gold quote in any currency to USD
+Android app (Kotlin, Jetpack Compose, Material 3) that converts a gold or silver quote in any currency to USD
 and shows it as a percent of melt value. See README.md for the user-facing behaviour.
 
 ## Layout
 
 ```
 app/src/main/java/com/goldmeltcheck/
-  core/   pure Kotlin: MeltMath, Catalog (currencies, purities), PriceParsers, GemMath, Gems
+  core/   pure Kotlin: MeltMath, Metal (gold/silver: purities, bands), Catalog (currencies), PriceParsers, GemMath, Gems
           (lab-grown signs + dated price ballparks). No Android imports.
   data/   PriceStore (DataStore cache), PriceApi (HTTP), PriceSync (WorkManager)
-  ui/     GoldScreen (Check), RatesScreen (Gold Rates), CurrencyScreen (Currency Rates), GemsScreen (Gems), GoldViewModel, Theme
+  ui/     GoldScreen (Check), RatesScreen (Metal Rates), CurrencyScreen (Currency Rates), GemsScreen (Gems), GoldViewModel, Theme
 app/src/test/  JUnit tests for core/
 ```
 
@@ -19,6 +19,8 @@ app/src/test/  JUnit tests for core/
 - **Offline first.** The calculator must always work from saved prices. Network code never blocks the UI.
 - **Background sync is WiFi only** (`NetworkType.UNMETERED`). Only the explicit "Refresh now" button may
   use mobile data.
+- Anything metal-specific (purities, fallback spot, markup bands) belongs on `Metal`, not in a `when` in the UI,
+  so a new metal is one enum entry.
 - Keep `core/` free of Android imports so it stays unit-testable on the JVM. New math goes there, with tests.
 - Price sources must be free and keyless. If one changes shape, fix `PriceParsers` and its tests together.
 - Never show a bundled estimate as live: anything not fetched is labelled as an estimate or the user's number.

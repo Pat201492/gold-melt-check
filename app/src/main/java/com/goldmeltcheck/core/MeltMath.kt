@@ -18,7 +18,8 @@ object MeltMath {
     /**
      * @param price total asking price, in the quoted currency
      * @param unitsPerUsd how many units of the quoted currency buy 1 USD
-     * @param spotUsdPerOz gold spot, USD per troy ounce of pure gold
+     * @param spotUsdPerOz spot price of the metal, USD per troy ounce of the pure metal
+     * @param metal sets the markup bands; silver normally sells at higher premiums than gold
      * @return null when any input is missing or not positive
      */
     fun evaluate(
@@ -27,6 +28,7 @@ object MeltMath {
         price: Double?,
         unitsPerUsd: Double?,
         spotUsdPerOz: Double?,
+        metal: Metal = Metal.GOLD,
     ): MeltResult? {
         if (grams == null || price == null || unitsPerUsd == null || spotUsdPerOz == null) return null
         if (grams <= 0 || price < 0 || unitsPerUsd <= 0 || spotUsdPerOz <= 0 || purity <= 0) return null
@@ -42,22 +44,22 @@ object MeltMath {
             percentOfMelt = percent,
             premiumUsd = priceUsd - meltUsd,
             usdPerGram = priceUsd / grams,
-            verdict = verdictFor(percent),
+            verdict = verdictFor(percent, metal),
         )
     }
 
     /** Price of one gram at [purity] in a currency, from spot (USD/oz) and that currency's units per USD. */
-    fun goldPricePerGram(spotUsdPerOz: Double, unitsPerUsd: Double, purity: Double = 1.0): Double =
+    fun pricePerGram(spotUsdPerOz: Double, unitsPerUsd: Double, purity: Double = 1.0): Double =
         spotUsdPerOz / GRAMS_PER_TROY_OUNCE * purity * unitsPerUsd
 
     /** Converts [amount] between two currencies, each given as its units per 1 USD. */
     fun convert(amount: Double, fromUnitsPerUsd: Double, toUnitsPerUsd: Double): Double =
         amount / fromUnitsPerUsd * toUnitsPerUsd
 
-    fun verdictFor(percentOfMelt: Double): Verdict = when {
+    fun verdictFor(percentOfMelt: Double, metal: Metal = Metal.GOLD): Verdict = when {
         percentOfMelt < 100 -> Verdict.BELOW_MELT
-        percentOfMelt <= 108 -> Verdict.NEAR_MELT
-        percentOfMelt <= 125 -> Verdict.MODERATE_MARKUP
+        percentOfMelt <= metal.nearMeltMax -> Verdict.NEAR_MELT
+        percentOfMelt <= metal.moderateMax -> Verdict.MODERATE_MARKUP
         else -> Verdict.HIGH_MARKUP
     }
 

@@ -1,15 +1,16 @@
 package com.goldmeltcheck.data
 
+import com.goldmeltcheck.core.Metal
 import com.goldmeltcheck.core.PriceParsers
 import java.net.HttpURLConnection
 import java.net.URL
 
 /** Free, keyless price sources. Blocking: call from a background thread. */
 object PriceApi {
-    const val GOLD_URL = "https://api.gold-api.com/price/XAU"
+    fun spotUrl(metal: Metal) = "https://api.gold-api.com/price/${metal.symbol}"
     const val RATES_URL = "https://open.er-api.com/v6/latest/USD"
 
-    fun fetchGoldUsdPerOz(): Double = PriceParsers.goldUsdPerOz(get(GOLD_URL))
+    fun fetchSpotUsdPerOz(metal: Metal): Double = PriceParsers.spotUsdPerOz(get(spotUrl(metal)))
 
     fun fetchUnitsPerUsd(): Map<String, Double> = PriceParsers.unitsPerUsd(get(RATES_URL))
 

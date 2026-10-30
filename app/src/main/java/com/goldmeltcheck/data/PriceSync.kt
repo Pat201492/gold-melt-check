@@ -12,22 +12,25 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.goldmeltcheck.core.Metal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
-/** Fetches gold spot and exchange rates and saves them on the phone. */
+/** Fetches gold and silver spot and exchange rates and saves them on the phone. */
 class PriceSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val store = PriceStore(applicationContext)
         val now = System.currentTimeMillis()
         val errors = mutableListOf<String>()
 
-        runCatching { PriceApi.fetchGoldUsdPerOz() }
-            .onSuccess { store.saveSpot(it, now) }
-            .onFailure { errors += "Gold price: ${it.message ?: it.javaClass.simpleName}" }
+        for (metal in Metal.entries) {
+            runCatching { PriceApi.fetchSpotUsdPerOz(metal) }
+                .onSuccess { store.saveSpot(metal, it, now) }
+                .onFailure { errors += "${metal.label} price: ${it.message ?: it.javaClass.simpleName}" }
+        }
         runCatching { PriceApi.fetchUnitsPerUsd() }
             .onSuccess { store.saveRates(it, now) }
             .onFailure { errors += "Exchange rates: ${it.message ?: it.javaClass.simpleName}" }

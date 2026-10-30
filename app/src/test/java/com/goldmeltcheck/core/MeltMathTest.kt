@@ -2,6 +2,7 @@ package com.goldmeltcheck.core
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class MeltMathTest {
@@ -30,12 +31,12 @@ class MeltMathTest {
         assertEquals(150.0, r.usdPerGram, 1e-9)
     }
 
-    @Test fun goldPricePerGramInAnyCurrency() {
+    @Test fun pricePerGramInAnyCurrency() {
         // $3110.34768/oz is exactly $100 per gram of pure gold
         val spot = GRAMS_PER_TROY_OUNCE * 100
-        assertEquals(100.0, MeltMath.goldPricePerGram(spot, 1.0), 1e-9)
-        assertEquals(86.0, MeltMath.goldPricePerGram(spot, 0.86), 1e-9)
-        assertEquals(75.0, MeltMath.goldPricePerGram(spot, 1.0, purity = 0.75), 1e-9)
+        assertEquals(100.0, MeltMath.pricePerGram(spot, 1.0), 1e-9)
+        assertEquals(86.0, MeltMath.pricePerGram(spot, 0.86), 1e-9)
+        assertEquals(75.0, MeltMath.pricePerGram(spot, 1.0, purity = 0.75), 1e-9)
     }
 
     @Test fun convertsBetweenAnyTwoCurrencies() {
@@ -46,6 +47,33 @@ class MeltMathTest {
         // Same currency is unchanged; round trip returns the start
         assertEquals(42.0, MeltMath.convert(42.0, 151.2, 151.2), 1e-12)
         assertEquals(42.0, MeltMath.convert(MeltMath.convert(42.0, 0.86, 151.2), 151.2, 0.86), 1e-9)
+    }
+
+    @Test fun silverHasWiderMarkupBands() {
+        assertEquals(Verdict.BELOW_MELT, MeltMath.verdictFor(99.0, Metal.SILVER))
+        assertEquals(Verdict.NEAR_MELT, MeltMath.verdictFor(115.0, Metal.SILVER))
+        assertEquals(Verdict.MODERATE_MARKUP, MeltMath.verdictFor(140.0, Metal.SILVER))
+        assertEquals(Verdict.HIGH_MARKUP, MeltMath.verdictFor(151.0, Metal.SILVER))
+        // the same 115% is already a moderate markup for gold
+        assertEquals(Verdict.MODERATE_MARKUP, MeltMath.verdictFor(115.0, Metal.GOLD))
+    }
+
+    @Test fun silverMeltValue() {
+        // 1 troy oz of sterling (.925) at $62/oz spot = $57.35 melt; paying $68.82 is 120%
+        val r = MeltMath.evaluate(GRAMS_PER_TROY_OUNCE, 0.925, 68.82, 1.0, 62.0, Metal.SILVER)!!
+        assertEquals(57.35, r.meltUsd, 1e-9)
+        assertEquals(120.0, r.percentOfMelt, 1e-9)
+        assertEquals(Verdict.NEAR_MELT, r.verdict)
+    }
+
+    @Test fun everyMetalHasAValidDefaultPurity() {
+        Metal.entries.forEach { m ->
+            assertEquals(m.purities[m.defaultPurityIndex], m.purity(m.defaultPurityIndex))
+            assertEquals(m.purities[m.defaultPurityIndex], m.purity(99))
+            m.purities.forEach { assertTrue(it.fineness in 0.0..1.0) }
+        }
+        assertEquals(Metal.GOLD, Metal.from(null))
+        assertEquals(Metal.SILVER, Metal.from("SILVER"))
     }
 
     @Test fun verdictBands() {

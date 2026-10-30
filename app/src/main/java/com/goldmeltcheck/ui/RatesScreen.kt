@@ -39,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.goldmeltcheck.core.Catalog
 import com.goldmeltcheck.core.GRAMS_PER_TROY_OUNCE
 import com.goldmeltcheck.core.MeltMath
+import com.goldmeltcheck.core.Metal
 import com.goldmeltcheck.data.PriceSnapshot
 import kotlinx.coroutines.delay
 import java.text.NumberFormat
@@ -64,27 +65,30 @@ fun RatesScreen(vm: GoldViewModel, contentPadding: PaddingValues, onPick: (Strin
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Column {
-                Text("Gold Rates", fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                Text("Metal Rates", fontSize = 30.sp, fontWeight = FontWeight.Bold)
                 Text(
-                    "Gold and exchange rates saved on this phone. Tap a currency to use it in the calculator.",
+                    "Gold, silver and exchange rates saved on this phone. Tap a currency to use it in the calculator.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
             Panel {
-                Eyebrow("Gold spot")
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(usd(p.effectiveSpot) + " /oz", fontSize = 22.sp, fontWeight = FontWeight.SemiBold,
-                        fontFamily = FontFamily.Monospace)
-                    Text(usd(p.effectiveSpot / GRAMS_PER_TROY_OUNCE) + " /g", fontSize = 22.sp,
-                        fontWeight = FontWeight.SemiBold, fontFamily = FontFamily.Monospace)
+                Eyebrow("Spot prices")
+                Metal.entries.forEach { m ->
+                    Column {
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+                            Text(m.label, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                            Text(usd(p.spot(m)) + " /oz", fontSize = 18.sp, fontFamily = FontFamily.Monospace)
+                        }
+                        Row(Modifier.fillMaxWidth()) {
+                            Column(Modifier.weight(1f)) {
+                                Status(m.label, fetchedAt = p.fetchedAt(m), overridden = p.overrideFor(m) != null, now = now)
+                            }
+                            Text(usd(p.spot(m) / GRAMS_PER_TROY_OUNCE) + " /g", fontFamily = FontFamily.Monospace,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
                 }
-                Status(
-                    "Gold",
-                    fetchedAt = p.spotFetchedAt,
-                    overridden = p.spotOverride != null,
-                    now = now,
-                )
                 Status("Exchange rates", fetchedAt = p.fxFetchedAt, overridden = false, now = now)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     OutlinedButton(onClick = vm::refreshNow, enabled = !refreshing) {
@@ -111,8 +115,9 @@ fun RatesScreen(vm: GoldViewModel, contentPadding: PaddingValues, onPick: (Strin
             }
 
             Text(
-                "Gold per gram is for pure (24k) gold. Rates marked est are bundled estimates, not yet " +
-                    "refreshed. Gold price from gold-api.com. Rates by Exchange Rate API (exchangerate-api.com).",
+                "Per-gram prices are for the pure metal (24k gold, .999 fine silver). Rates marked est are " +
+                    "bundled estimates, not yet refreshed. Gold and silver prices from gold-api.com. Rates by " +
+                    "Exchange Rate API (exchangerate-api.com).",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -137,9 +142,10 @@ private fun RatesTable(p: PriceSnapshot, selected: String, onPick: (String) -> U
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Column {
         Row(Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
-            HeaderCell("Currency", Modifier.weight(1.1f), TextAlign.Start)
+            HeaderCell("Currency", Modifier.weight(1.05f), TextAlign.Start)
             HeaderCell("1 USD =", Modifier.weight(1f), TextAlign.End)
-            HeaderCell("Gold / g", Modifier.weight(1.1f), TextAlign.End)
+            HeaderCell("Gold / g", Modifier.weight(1f), TextAlign.End)
+            HeaderCell("Silver / g", Modifier.weight(0.95f), TextAlign.End)
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outline)
         Catalog.currencies.forEach { c ->
@@ -154,7 +160,7 @@ private fun RatesTable(p: PriceSnapshot, selected: String, onPick: (String) -> U
                     .padding(vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(Modifier.weight(1.1f)) {
+                Column(Modifier.weight(1.05f)) {
                     Text(
                         c.code,
                         fontFamily = FontFamily.Monospace,
@@ -173,10 +179,16 @@ private fun RatesTable(p: PriceSnapshot, selected: String, onPick: (String) -> U
                     }
                 }
                 Text(
-                    amount(MeltMath.goldPricePerGram(p.effectiveSpot, rate)),
+                    amount(MeltMath.pricePerGram(p.spot(Metal.GOLD), rate)),
                     fontFamily = FontFamily.Monospace,
                     textAlign = TextAlign.End,
-                    modifier = Modifier.weight(1.1f),
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    amount(MeltMath.pricePerGram(p.spot(Metal.SILVER), rate)),
+                    fontFamily = FontFamily.Monospace,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.weight(0.95f),
                 )
             }
             HorizontalDivider(color = MaterialTheme.colorScheme.outline)

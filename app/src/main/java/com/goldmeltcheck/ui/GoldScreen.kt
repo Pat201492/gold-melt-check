@@ -59,6 +59,7 @@ import com.goldmeltcheck.core.Catalog
 import com.goldmeltcheck.core.GRAMS_PER_TROY_OUNCE
 import com.goldmeltcheck.core.MeltMath
 import com.goldmeltcheck.core.MeltResult
+import com.goldmeltcheck.core.Metal
 import com.goldmeltcheck.core.Verdict
 import com.goldmeltcheck.data.PriceSnapshot
 import kotlinx.coroutines.delay
@@ -106,7 +107,8 @@ fun GoldScreen(vm: GoldViewModel = viewModel(), contentPadding: PaddingValues = 
             Column {
                 Text("Gold Melt Check", fontSize = 30.sp, fontWeight = FontWeight.Bold)
                 Text(
-                    "Enter what a dealer is asking. See it in US dollars and as a percentage of melt value.",
+                    "Enter what a dealer is asking for gold or silver. See it in US dollars and as a " +
+                        "percentage of melt value.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -114,13 +116,12 @@ fun GoldScreen(vm: GoldViewModel = viewModel(), contentPadding: PaddingValues = 
             VerdictCard(result)
             PricesCard(vm, prices, refreshing)
             Text(
-                "Melt value = grams × purity × spot ÷ 31.1035 (grams per troy ounce). Bullion bars and coins " +
-                    "commonly sell a few percent over melt; jewelry much more.",
+                "Melt value = grams × purity × spot ÷ 31.1035 (grams per troy ounce). ${vm.metal.premiumNote}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                "Gold price from gold-api.com. Rates by Exchange Rate API (exchangerate-api.com).",
+                "Gold and silver prices from gold-api.com. Rates by Exchange Rate API (exchangerate-api.com).",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -152,7 +153,15 @@ internal fun Eyebrow(text: String) = Text(
 @Composable
 private fun InputsCard(vm: GoldViewModel) {
     val inputs = vm.inputs
+    val metal = vm.metal
     Panel {
+        Picker(
+            label = "Metal",
+            options = Metal.entries.map { it.label },
+            selected = metal.ordinal,
+            onSelect = { i -> vm.selectMetal(Metal.entries[i]) },
+            modifier = Modifier.fillMaxWidth(),
+        )
         Picker(
             label = "Currency you're quoted in",
             options = Catalog.currencies.map { "${it.code} · ${it.name}" },
@@ -170,8 +179,8 @@ private fun InputsCard(vm: GoldViewModel) {
             )
             Picker(
                 label = "Purity",
-                options = Catalog.purities.map { it.label },
-                selected = inputs.purityIndex,
+                options = metal.purities.map { it.label },
+                selected = inputs.purityIndex.coerceIn(0, metal.purities.lastIndex),
                 onSelect = { i -> vm.update { it.copy(purityIndex = i) } },
                 modifier = Modifier.weight(1.2f),
             )
@@ -266,22 +275,24 @@ private fun PricesCard(vm: GoldViewModel, p: PriceSnapshot, refreshing: Boolean)
     Panel {
         Eyebrow("Spot price and exchange rate")
 
+        val metal = vm.metal
         OverrideField(
-            label = "Gold spot, USD per troy oz",
-            live = p.spotUsdPerOz,
-            override = p.spotOverride,
+            label = "${metal.label} spot, USD per troy oz",
+            live = p.liveSpot(metal),
+            override = p.overrideFor(metal),
             decimals = 2,
             onEdit = vm::setSpotOverride,
+            key = metal,
         )
         SourceLine(
-            fetchedAt = p.spotFetchedAt,
-            overridden = p.spotOverride != null,
-            liveText = usd(p.spotUsdPerOz),
+            fetchedAt = p.fetchedAt(metal),
+            overridden = p.overrideFor(metal) != null,
+            liveText = usd(p.liveSpot(metal)),
             now = now,
             onUseLive = { vm.setSpotOverride(null) },
         )
         Text(
-            "${usd(p.effectiveSpot / GRAMS_PER_TROY_OUNCE)} per gram of pure gold",
+            "${usd(p.spot(metal) / GRAMS_PER_TROY_OUNCE)} per gram of pure ${metal.label.lowercase()}",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
