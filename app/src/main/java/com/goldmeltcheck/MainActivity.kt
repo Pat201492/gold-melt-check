@@ -46,7 +46,7 @@ private data class Tab(val label: String, val icon: ImageVector)
 
 private val tabs = listOf(
     Tab("Check", Icons.Filled.CheckCircle),
-    Tab("Gold Rates", Icons.Filled.Star),
+    Tab("Metal Rates", Icons.Filled.Star),
     Tab("Currency Rates", Icons.Filled.Refresh),
     Tab("Gems", GemIcon),
 )

@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.goldmeltcheck.core.Catalog
 import com.goldmeltcheck.core.MeltMath
 import com.goldmeltcheck.core.MeltResult
+import com.goldmeltcheck.core.Metal
 import com.goldmeltcheck.core.PriceRange
 import com.goldmeltcheck.data.PriceSnapshot
 import com.goldmeltcheck.data.PriceStore
@@ -49,15 +50,24 @@ class GoldViewModel(app: Application) : AndroidViewModel(app) {
 
     fun result(p: PriceSnapshot): MeltResult? = MeltMath.evaluate(
         grams = MeltMath.parseAmount(inputs.grams, phoneDecimal()),
-        purity = Catalog.purities.getOrElse(inputs.purityIndex) { Catalog.purities[Catalog.DEFAULT_PURITY_INDEX] }.fineness,
+        purity = metal.purity(inputs.purityIndex).fineness,
         price = MeltMath.parseAmount(inputs.price, phoneDecimal()),
         unitsPerUsd = p.effectiveRate(inputs.currency),
-        spotUsdPerOz = p.effectiveSpot,
+        spotUsdPerOz = p.spot(metal),
+        metal = metal,
     )
+
+    val metal: Metal get() = Metal.from(inputs.metal)
+
+    /** Switching metal resets purity, since each metal has its own list. */
+    fun selectMetal(m: Metal) = update {
+        if (it.metal == m.name) it else it.copy(metal = m.name, purityIndex = m.defaultPurityIndex)
+    }
 
     /** A typed value equal to the live one is not an override. */
     fun setSpotOverride(value: Double?) = viewModelScope.launch {
-        store.setSpotOverride(value?.takeIf { it > 0 && it != prices.value.spotUsdPerOz })
+        val m = metal
+        store.setSpotOverride(m, value?.takeIf { it > 0 && it != prices.value.liveSpot(m) })
     }
 
     fun setRateOverride(value: Double?) = viewModelScope.launch {

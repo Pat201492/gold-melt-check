@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.goldmeltcheck.core.Metal
 import com.goldmeltcheck.core.PriceRange
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -26,6 +27,10 @@ class PriceStore(context: Context) {
         val lastAttemptAt = longPreferencesKey("last_attempt_at")
         val lastError = stringPreferencesKey("last_error")
         val spotOverride = doublePreferencesKey("spot_override")
+        val silver = doublePreferencesKey("silver_usd_per_oz")
+        val silverFetchedAt = longPreferencesKey("silver_fetched_at")
+        val silverOverride = doublePreferencesKey("silver_override")
+        val inMetal = stringPreferencesKey("input_metal")
         val fxOverrides = stringPreferencesKey("fx_overrides")
         val inCurrency = stringPreferencesKey("input_currency")
         val inGrams = stringPreferencesKey("input_grams")
@@ -50,6 +55,9 @@ class PriceStore(context: Context) {
             lastAttemptAt = p[Keys.lastAttemptAt] ?: 0,
             lastError = p[Keys.lastError],
             spotOverride = p[Keys.spotOverride],
+            silverUsdPerOz = p[Keys.silver] ?: defaults.silverUsdPerOz,
+            silverFetchedAt = p[Keys.silverFetchedAt] ?: 0,
+            silverOverride = p[Keys.silverOverride],
             fxOverrides = decode(p[Keys.fxOverrides]),
         )
     }
@@ -57,6 +65,7 @@ class PriceStore(context: Context) {
     val inputs: Flow<SavedInputs> = store.data.map { p ->
         val d = SavedInputs()
         SavedInputs(
+            metal = p[Keys.inMetal] ?: d.metal,
             currency = p[Keys.inCurrency] ?: d.currency,
             grams = p[Keys.inGrams] ?: d.grams,
             purityIndex = p[Keys.inPurity] ?: d.purityIndex,
@@ -70,9 +79,11 @@ class PriceStore(context: Context) {
         )
     }
 
-    suspend fun saveSpot(usdPerOz: Double, at: Long) = store.edit {
-        it[Keys.spot] = usdPerOz
-        it[Keys.spotFetchedAt] = at
+    suspend fun saveSpot(metal: Metal, usdPerOz: Double, at: Long) = store.edit {
+        when (metal) {
+            Metal.GOLD -> { it[Keys.spot] = usdPerOz; it[Keys.spotFetchedAt] = at }
+            Metal.SILVER -> { it[Keys.silver] = usdPerOz; it[Keys.silverFetchedAt] = at }
+        }
     }
 
     suspend fun saveRates(unitsPerUsd: Map<String, Double>, at: Long) = store.edit {
@@ -85,8 +96,12 @@ class PriceStore(context: Context) {
         if (error == null) it.remove(Keys.lastError) else it[Keys.lastError] = error
     }
 
-    suspend fun setSpotOverride(value: Double?) = store.edit {
-        if (value == null) it.remove(Keys.spotOverride) else it[Keys.spotOverride] = value
+    suspend fun setSpotOverride(metal: Metal, value: Double?) = store.edit {
+        val key = when (metal) {
+            Metal.GOLD -> Keys.spotOverride
+            Metal.SILVER -> Keys.silverOverride
+        }
+        if (value == null) it.remove(key) else it[key] = value
     }
 
     suspend fun setRateOverride(code: String, value: Double?) = store.edit { p ->
@@ -96,6 +111,7 @@ class PriceStore(context: Context) {
     }
 
     suspend fun saveInputs(inputs: SavedInputs) = store.edit {
+        it[Keys.inMetal] = inputs.metal
         it[Keys.inCurrency] = inputs.currency
         it[Keys.inGrams] = inputs.grams
         it[Keys.inPurity] = inputs.purityIndex

@@ -3,11 +3,11 @@ package com.goldmeltcheck.core
 import org.json.JSONObject
 
 object PriceParsers {
-    /** gold-api.com `/price/XAU`: `{"name":"Gold","price":4350.1,"symbol":"XAU",...}` */
-    fun goldUsdPerOz(body: String): Double {
+    /** gold-api.com `/price/XAU` or `/price/XAG`: `{"name":"Gold","price":4350.1,"symbol":"XAU",...}` */
+    fun spotUsdPerOz(body: String): Double {
         val json = JSONObject(body)
         val price = json.optDouble("price", Double.NaN)
-        require(price.isFinite() && price > 0) { "response had no gold price" }
+        require(price.isFinite() && price > 0) { "response had no price" }
         return price
     }
 

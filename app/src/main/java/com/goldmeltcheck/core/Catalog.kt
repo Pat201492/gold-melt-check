@@ -29,20 +29,5 @@ object Catalog {
         Currency("ZAR", "South African rand", 17.4),
     )
 
-    /** Rough spot estimate (USD/oz, late Sept 2026), used only until the first successful refresh. */
-    const val FALLBACK_SPOT_USD_PER_OZ = 4350.0
-
-    val purities = listOf(
-        Purity("24k · .9999", 0.9999),
-        Purity("24k · .999", 0.999),
-        Purity("22k · .916", 0.9167),
-        Purity("21k · .875", 0.875),
-        Purity("18k · .750", 0.75),
-        Purity("14k · .585", 0.585),
-        Purity("10k · .417", 0.417),
-        Purity("Coin · .900", 0.9),
-    )
-    const val DEFAULT_PURITY_INDEX = 1
-
     fun currency(code: String): Currency = currencies.firstOrNull { it.code == code } ?: currencies.first()
 }
