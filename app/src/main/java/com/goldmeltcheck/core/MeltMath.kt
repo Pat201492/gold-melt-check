@@ -35,7 +35,7 @@ object MeltMath {
 
         val priceUsd = price / unitsPerUsd
         val fineGrams = grams * purity
-        val meltUsd = fineGrams / GRAMS_PER_TROY_OUNCE * spotUsdPerOz
+        val meltUsd = meltValueUsd(grams, purity, spotUsdPerOz)
         val percent = priceUsd / meltUsd * 100
         return MeltResult(
             priceUsd = priceUsd,
@@ -46,6 +46,21 @@ object MeltMath {
             usdPerGram = priceUsd / grams,
             verdict = verdictFor(percent, metal),
         )
+    }
+
+    /** Melt value in USD of [grams] at [purity]: the pure metal it contains, at spot. */
+    fun meltValueUsd(grams: Double, purity: Double, spotUsdPerOz: Double): Double =
+        grams * purity / GRAMS_PER_TROY_OUNCE * spotUsdPerOz
+
+    /**
+     * The total asking price, from what was typed. A store quoting per gram means [price] × [grams];
+     * null when either is missing or negative.
+     */
+    fun totalPrice(price: Double?, grams: Double?, perGram: Boolean): Double? {
+        if (price == null || price < 0) return null
+        if (!perGram) return price
+        if (grams == null || grams <= 0) return null
+        return price * grams
     }
 
     /** Price of one gram at [purity] in a currency, from spot (USD/oz) and that currency's units per USD. */

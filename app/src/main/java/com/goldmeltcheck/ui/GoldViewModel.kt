@@ -59,10 +59,20 @@ class GoldViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { store.saveInputs(snapshot) }
     }
 
+    private val grams: Double? get() = MeltMath.parseAmount(inputs.grams, phoneDecimal())
+
+    /** What the piece costs in total in the quoted currency, whether the store quoted a total or per gram. */
+    val totalPrice: Double?
+        get() = MeltMath.totalPrice(MeltMath.parseAmount(inputs.price, phoneDecimal()), grams, inputs.pricePerGram)
+
+    /** Melt value in USD as soon as a weight is entered, before any price. */
+    fun meltUsd(p: PriceSnapshot): Double? =
+        grams?.takeIf { it > 0 }?.let { MeltMath.meltValueUsd(it, metal.purity(inputs.purityIndex).fineness, p.spot(metal)) }
+
     fun result(p: PriceSnapshot): MeltResult? = MeltMath.evaluate(
-        grams = MeltMath.parseAmount(inputs.grams, phoneDecimal()),
+        grams = grams,
         purity = metal.purity(inputs.purityIndex).fineness,
-        price = MeltMath.parseAmount(inputs.price, phoneDecimal()),
+        price = totalPrice,
         unitsPerUsd = p.effectiveRate(inputs.currency),
         spotUsdPerOz = p.spot(metal),
         metal = metal,
