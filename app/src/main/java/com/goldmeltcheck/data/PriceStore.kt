@@ -1,6 +1,7 @@
 package com.goldmeltcheck.data
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -42,6 +43,7 @@ class PriceStore(context: Context) {
         val inGrams = stringPreferencesKey("input_grams")
         val inPurity = intPreferencesKey("input_purity")
         val inPrice = stringPreferencesKey("input_price")
+        val inPricePerGram = booleanPreferencesKey("input_price_per_gram")
         val convertFrom = stringPreferencesKey("convert_from")
         val convertAmount = stringPreferencesKey("convert_amount")
         val gemId = stringPreferencesKey("gem_id")
@@ -79,6 +81,7 @@ class PriceStore(context: Context) {
             grams = p[Keys.inGrams] ?: d.grams,
             purityIndex = p[Keys.inPurity] ?: d.purityIndex,
             price = p[Keys.inPrice] ?: d.price,
+            pricePerGram = p[Keys.inPricePerGram] ?: d.pricePerGram,
             convertFrom = p[Keys.convertFrom] ?: d.convertFrom,
             convertAmount = p[Keys.convertAmount] ?: d.convertAmount,
             gemId = p[Keys.gemId] ?: d.gemId,
@@ -125,6 +128,7 @@ class PriceStore(context: Context) {
         it[Keys.inGrams] = inputs.grams
         it[Keys.inPurity] = inputs.purityIndex
         it[Keys.inPrice] = inputs.price
+        it[Keys.inPricePerGram] = inputs.pricePerGram
         it[Keys.convertFrom] = inputs.convertFrom
         it[Keys.convertAmount] = inputs.convertAmount
         it[Keys.gemId] = inputs.gemId

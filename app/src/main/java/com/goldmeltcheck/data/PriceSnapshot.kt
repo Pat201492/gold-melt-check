@@ -53,6 +53,8 @@ data class SavedInputs(
     /** Index into the selected metal's purities. */
     val purityIndex: Int = Metal.GOLD.defaultPurityIndex,
     val price: String = "1500",
+    /** True when [price] is the store's price per gram rather than the total for the piece. */
+    val pricePerGram: Boolean = false,
     val convertFrom: String = "USD",
     val convertAmount: String = "1",
     val gemId: String = "diamond",

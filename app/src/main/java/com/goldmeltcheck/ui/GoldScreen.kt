@@ -112,7 +112,7 @@ fun GoldScreen(vm: GoldViewModel = viewModel(), contentPadding: PaddingValues = 
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            InputsCard(vm)
+            InputsCard(vm, prices)
             VerdictCard(result)
             PricesCard(vm, prices, refreshing)
             Text(
@@ -151,7 +151,7 @@ internal fun Eyebrow(text: String) = Text(
 )
 
 @Composable
-private fun InputsCard(vm: GoldViewModel) {
+private fun InputsCard(vm: GoldViewModel, p: PriceSnapshot) {
     val inputs = vm.inputs
     val metal = vm.metal
     Panel {
@@ -185,16 +185,59 @@ private fun InputsCard(vm: GoldViewModel) {
                 modifier = Modifier.weight(1.2f),
             )
         }
+        MeltLine(vm.meltUsd(p), inputs.currency, p.effectiveRate(inputs.currency))
+        Picker(
+            label = "The price is",
+            options = listOf("Total for the piece", "Per gram"),
+            selected = if (inputs.pricePerGram) 1 else 0,
+            onSelect = { i -> vm.update { it.copy(pricePerGram = i == 1) } },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        val total = vm.totalPrice
         NumberField(
-            label = "Price they're charging (total)",
+            label = if (inputs.pricePerGram) "Price per gram" else "Price they're charging (total)",
             value = inputs.price,
-            suffix = inputs.currency,
+            suffix = if (inputs.pricePerGram) "${inputs.currency}/g" else inputs.currency,
             onValueChange = { v -> vm.update { it.copy(price = v) } },
-            supporting = readBack(inputs.price, inputs.currency, 2),
+            supporting = if (inputs.pricePerGram && total != null) {
+                "${readBack(inputs.price, "${inputs.currency}/g", 2)} · total ${amountIn(total)} ${inputs.currency}"
+            } else {
+                readBack(inputs.price, inputs.currency, 2)
+            },
             modifier = Modifier.fillMaxWidth(),
         )
     }
 }
+
+/** Melt value of the weight entered, shown before any price: USD, plus the quoted currency. */
+@Composable
+private fun MeltLine(meltUsd: Double?, currency: String, unitsPerUsd: Double) {
+    if (meltUsd == null) return
+    Surface(
+        color = LocalVerdictColors.current.goldSoft,
+        shape = RoundedCornerShape(10.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("Melt value", fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+            Column(horizontalAlignment = Alignment.End) {
+                Text(usd(meltUsd), fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                if (currency != "USD") {
+                    Text(
+                        "≈ ${amountIn(meltUsd * unitsPerUsd)} $currency",
+                        fontFamily = FontFamily.Monospace,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** A money amount in the phone's number format, two decimals. */
+private fun amountIn(v: Double): String =
+    NumberFormat.getNumberInstance().apply { minimumFractionDigits = 2; maximumFractionDigits = 2 }.format(v)
 
 @Composable
 private fun VerdictCard(result: MeltResult?) {

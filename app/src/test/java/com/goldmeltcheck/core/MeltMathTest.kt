@@ -76,6 +76,25 @@ class MeltMathTest {
         assertEquals(Metal.SILVER, Metal.from("SILVER"))
     }
 
+    @Test fun meltValueForAnyWeight() {
+        // 10 g of 18k (.750) at $4,000/oz = 7.5 g fine = 0.24113 oz = $964.52
+        assertEquals(7.5 / GRAMS_PER_TROY_OUNCE * 4000.0, MeltMath.meltValueUsd(10.0, 0.75, 4000.0), 1e-9)
+        assertEquals(4000.0, MeltMath.meltValueUsd(GRAMS_PER_TROY_OUNCE, 1.0, 4000.0), 1e-9)
+    }
+
+    @Test fun perGramPriceMultipliesByWeight() {
+        assertEquals(850.0, MeltMath.totalPrice(85.0, 10.0, perGram = true)!!, 1e-9)
+        assertEquals(85.0, MeltMath.totalPrice(85.0, 10.0, perGram = false)!!, 1e-9)
+        assertEquals(85.0, MeltMath.totalPrice(85.0, null, perGram = false)!!, 1e-9)
+        assertNull(MeltMath.totalPrice(85.0, null, perGram = true))
+        assertNull(MeltMath.totalPrice(85.0, 0.0, perGram = true))
+        assertNull(MeltMath.totalPrice(null, 10.0, perGram = true))
+        // Per-gram quote feeds the same percent-of-melt result as the equivalent total
+        val total = MeltMath.evaluate(10.0, 0.75, MeltMath.totalPrice(100.0, 10.0, true), 1.0, 4000.0)!!
+        val direct = MeltMath.evaluate(10.0, 0.75, 1000.0, 1.0, 4000.0)!!
+        assertEquals(direct.percentOfMelt, total.percentOfMelt, 1e-9)
+    }
+
     @Test fun verdictBands() {
         assertEquals(Verdict.BELOW_MELT, MeltMath.verdictFor(99.9))
         assertEquals(Verdict.NEAR_MELT, MeltMath.verdictFor(100.0))
