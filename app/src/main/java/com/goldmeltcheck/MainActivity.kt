@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.materialIcon
@@ -29,6 +30,7 @@ import com.goldmeltcheck.ui.GoldScreen
 import com.goldmeltcheck.ui.GoldTheme
 import com.goldmeltcheck.ui.GoldViewModel
 import com.goldmeltcheck.ui.RatesScreen
+import com.goldmeltcheck.ui.TrendsScreen
 
 /** A cut-gem outline: flat table on top, pointed culet below. The core icon set has none. */
 private val GemIcon: ImageVector = materialIcon(name = "Gem") {
@@ -47,6 +49,7 @@ private data class Tab(val label: String, val icon: ImageVector)
 private val tabs = listOf(
     Tab("Check", Icons.Filled.CheckCircle),
     Tab("Metal Rates", Icons.Filled.Star),
+    Tab("Trends", Icons.Filled.Notifications),
     Tab("Currency Rates", Icons.Filled.Refresh),
     Tab("Gems", GemIcon),
 )
@@ -82,7 +85,8 @@ class MainActivity : ComponentActivity() {
                             vm.update { it.copy(currency = code) }
                             tab = 0
                         })
-                        2 -> CurrencyScreen(vm, padding)
+                        2 -> TrendsScreen(vm, padding)
+                        3 -> CurrencyScreen(vm, padding)
                         else -> GemsScreen(vm, padding)
                     }
                 }

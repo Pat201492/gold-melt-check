@@ -7,6 +7,7 @@ class GoldMeltCheckApp : Application() {
     override fun onCreate() {
         super.onCreate()
         PriceSync.schedule(this)
+        PriceSync.scheduleHourlySpot(this)
         PriceSync.refreshOnWifi(this)
     }
 }

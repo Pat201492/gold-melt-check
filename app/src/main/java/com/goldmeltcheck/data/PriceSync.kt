@@ -13,13 +13,17 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.goldmeltcheck.core.Metal
+import com.goldmeltcheck.core.PricePoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
-/** Fetches gold and silver spot and exchange rates and saves them on the phone. */
+/**
+ * Fetches gold and silver spot (and, unless [KEY_SPOT_ONLY], exchange rates), saves them on the phone,
+ * adds the spot prices to the history, and posts any price alerts they trip.
+ */
 class PriceSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val store = PriceStore(applicationContext)
@@ -28,12 +32,17 @@ class PriceSyncWorker(context: Context, params: WorkerParameters) : CoroutineWor
 
         for (metal in Metal.entries) {
             runCatching { PriceApi.fetchSpotUsdPerOz(metal) }
-                .onSuccess { store.saveSpot(metal, it, now) }
+                .onSuccess {
+                    store.saveSpot(metal, it, now)
+                    PriceAlerts.recordAndCheck(applicationContext, store, metal, PricePoint(now, it))
+                }
                 .onFailure { errors += "${metal.label} price: ${it.message ?: it.javaClass.simpleName}" }
         }
-        runCatching { PriceApi.fetchUnitsPerUsd() }
-            .onSuccess { store.saveRates(it, now) }
-            .onFailure { errors += "Exchange rates: ${it.message ?: it.javaClass.simpleName}" }
+        if (!inputData.getBoolean(KEY_SPOT_ONLY, false)) {
+            runCatching { PriceApi.fetchUnitsPerUsd() }
+                .onSuccess { store.saveRates(it, now) }
+                .onFailure { errors += "Exchange rates: ${it.message ?: it.javaClass.simpleName}" }
+        }
 
         store.recordAttempt(now, errors.takeIf { it.isNotEmpty() }?.joinToString("\n"))
         when {
@@ -46,6 +55,7 @@ class PriceSyncWorker(context: Context, params: WorkerParameters) : CoroutineWor
 
     companion object {
         const val KEY_MANUAL = "manual"
+        const val KEY_SPOT_ONLY = "spot_only"
     }
 }
 
@@ -53,6 +63,7 @@ object PriceSync {
     private const val PERIODIC = "price-sync-wifi"
     private const val ON_OPEN = "price-sync-on-open"
     private const val MANUAL = "price-sync-now"
+    private const val HOURLY_SPOT = "spot-check-hourly"
 
     private val wifiOnly = Constraints.Builder().setRequiredNetworkType(NetworkType.UNMETERED).build()
     private val anyNetwork = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
@@ -64,6 +75,19 @@ object PriceSync {
             .build()
         WorkManager.getInstance(context)
             .enqueueUniquePeriodicWork(PERIODIC, ExistingPeriodicWorkPolicy.KEEP, request)
+    }
+
+    /**
+     * Hourly gold and silver check for history and alerts, on any connection. Each check is two tiny
+     * requests (well under 1 KB); exchange rates stay on the WiFi-only schedule above.
+     */
+    fun scheduleHourlySpot(context: Context) {
+        val request = PeriodicWorkRequestBuilder<PriceSyncWorker>(1, TimeUnit.HOURS)
+            .setConstraints(anyNetwork)
+            .setInputData(workDataOf(PriceSyncWorker.KEY_SPOT_ONLY to true))
+            .build()
+        WorkManager.getInstance(context)
+            .enqueueUniquePeriodicWork(HOURLY_SPOT, ExistingPeriodicWorkPolicy.KEEP, request)
     }
 
     /** Opening the app refreshes too, but still waits for WiFi. */
