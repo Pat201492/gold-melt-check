@@ -8,17 +8,17 @@ and shows it as a percent of melt value. See README.md for the user-facing behav
 ```
 app/src/main/java/com/goldmeltcheck/
   core/   pure Kotlin: MeltMath, Metal (gold/silver: purities, bands), Catalog (currencies), PriceParsers, GemMath, Gems
-          (lab-grown signs + dated price ballparks). No Android imports.
-  data/   PriceStore (DataStore cache), PriceApi (HTTP), PriceSync (WorkManager)
-  ui/     GoldScreen (Check), RatesScreen (Metal Rates), CurrencyScreen (Currency Rates), GemsScreen (Gems), GoldViewModel, Theme
+          (lab-grown signs + dated price ballparks), History + Alerts (trend stats, alert rules). No Android imports.
+  data/   PriceStore (DataStore cache + price history), PriceApi (HTTP), PriceSync (WorkManager), PriceAlerts (notifications)
+  ui/     GoldScreen (Check), RatesScreen (Metal Rates), TrendsScreen (Trends), CurrencyScreen (Currency Rates), GemsScreen (Gems), GoldViewModel, Theme
 app/src/test/  JUnit tests for core/
 ```
 
 ## Rules
 
 - **Offline first.** The calculator must always work from saved prices. Network code never blocks the UI.
-- **Background sync is WiFi only** (`NetworkType.UNMETERED`). Only the explicit "Refresh now" button may
-  use mobile data.
+- **Network use:** exchange rates refresh only on WiFi (`NetworkType.UNMETERED`). The hourly gold/silver check
+  (history + alerts) and the explicit "Refresh now" button may use any connection; keep those requests tiny.
 - Anything metal-specific (purities, fallback spot, markup bands) belongs on `Metal`, not in a `when` in the UI,
   so a new metal is one enum entry.
 - Keep `core/` free of Android imports so it stays unit-testable on the JVM. New math goes there, with tests.

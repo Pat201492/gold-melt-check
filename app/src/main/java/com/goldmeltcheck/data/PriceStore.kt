@@ -7,8 +7,14 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.goldmeltcheck.core.AlertRule
+import com.goldmeltcheck.core.AlertType
+import com.goldmeltcheck.core.Alerts
+import com.goldmeltcheck.core.History
 import com.goldmeltcheck.core.Metal
+import com.goldmeltcheck.core.PricePoint
 import com.goldmeltcheck.core.PriceRange
+import org.json.JSONArray
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.json.JSONObject
@@ -43,6 +49,9 @@ class PriceStore(context: Context) {
         val gemCurrency = stringPreferencesKey("gem_currency")
         val gemCarats = stringPreferencesKey("gem_carats")
         val gemRanges = stringPreferencesKey("gem_range_overrides")
+        fun history(metal: Metal) = stringPreferencesKey("history_${metal.name}")
+        val alertRules = stringPreferencesKey("alert_rules")
+        val alertFired = stringPreferencesKey("alert_last_fired")
     }
 
     val snapshot: Flow<PriceSnapshot> = store.data.map { p ->
@@ -147,6 +156,72 @@ class PriceStore(context: Context) {
             }
         }.getOrDefault(emptyMap())
     }
+
+    /** Saved spot prices for each metal, oldest first. */
+    val history: Flow<Map<Metal, List<PricePoint>>> = store.data.map { p ->
+        Metal.entries.associateWith { decodeHistory(p[Keys.history(it)]) }
+    }
+
+    /** Adds a fetched price to the metal's history and returns the updated history. */
+    suspend fun appendHistory(metal: Metal, point: PricePoint): List<PricePoint> {
+        var updated = emptyList<PricePoint>()
+        store.edit { p ->
+            updated = History.append(decodeHistory(p[Keys.history(metal)]), point)
+            p[Keys.history(metal)] = updated.joinToString(";") { "${it.at}:${it.usdPerOz}" }
+        }
+        return updated
+    }
+
+    /** Alert rules; a fresh install starts with a 4-week-low alert for each metal. */
+    val alertRules: Flow<List<AlertRule>> = store.data.map { p ->
+        p[Keys.alertRules]?.let(::decodeRules) ?: Alerts.defaults
+    }
+
+    suspend fun saveAlertRules(rules: List<AlertRule>) = store.edit { p ->
+        val json = JSONArray()
+        rules.forEach { r ->
+            json.put(JSONObject().put("id", r.id).put("metal", r.metal.name).put("type", r.type.name)
+                .put("value", r.value).put("enabled", r.enabled))
+        }
+        p[Keys.alertRules] = json.toString()
+    }
+
+    /** When each rule last notified, by rule id. */
+    val alertLastFired: Flow<Map<String, Long>> = store.data.map { p ->
+        decode(p[Keys.alertFired]).mapValues { it.value.toLong() }
+    }
+
+    suspend fun markAlertFired(id: String, at: Long) = store.edit { p ->
+        val current = decode(p[Keys.alertFired]).toMutableMap()
+        current[id] = at.toDouble()
+        p[Keys.alertFired] = encode(current)
+    }
+
+    private fun decodeHistory(raw: String?): List<PricePoint> {
+        if (raw.isNullOrEmpty()) return emptyList()
+        return raw.split(';').mapNotNull { part ->
+            val i = part.indexOf(':')
+            if (i < 0) return@mapNotNull null
+            val at = part.substring(0, i).toLongOrNull()
+            val price = part.substring(i + 1).toDoubleOrNull()
+            if (at == null || price == null) null else PricePoint(at, price)
+        }.sortedBy { it.at }
+    }
+
+    private fun decodeRules(raw: String): List<AlertRule> = runCatching {
+        val json = JSONArray(raw)
+        (0 until json.length()).mapNotNull { i ->
+            val o = json.getJSONObject(i)
+            val type = AlertType.entries.firstOrNull { it.name == o.optString("type") } ?: return@mapNotNull null
+            AlertRule(
+                id = o.getString("id"),
+                metal = Metal.from(o.optString("metal")),
+                type = type,
+                value = o.getDouble("value"),
+                enabled = o.optBoolean("enabled", true),
+            )
+        }
+    }.getOrDefault(Alerts.defaults)
 
     private fun encode(map: Map<String, Double>): String = JSONObject(map as Map<*, *>).toString()
 
