@@ -39,6 +39,19 @@ class GemMathTest {
         assertEquals(PriceBand.BOTH, GemMath.band(500.0, PriceRange(300.0, 900.0), PriceRange(100.0, 600.0)))
     }
 
+    @Test fun ballparksGoStaleAfterSixMonths() {
+        val y = Gems.PRICES_YEAR
+        val m = Gems.PRICES_MONTH
+        assertEquals(0, Gems.ageInMonths(y, m))
+        assertEquals(false, Gems.isStale(y, m))
+        // five months on is still fresh; six months on is stale, across a year boundary too
+        val fiveOn = (m - 1 + 5)
+        assertEquals(false, Gems.isStale(y + fiveOn / 12, fiveOn % 12 + 1))
+        val sixOn = (m - 1 + 6)
+        assertEquals(true, Gems.isStale(y + sixOn / 12, sixOn % 12 + 1))
+        assertEquals(12, Gems.ageInMonths(y + 1, m))
+    }
+
     @Test fun everyStoneHasSignsAndSaneDefaults() {
         assertTrue(Gems.all.size >= 9)
         assertEquals(Gems.all.size, Gems.all.map { it.id }.toSet().size)

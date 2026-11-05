@@ -129,6 +129,16 @@ fun GemsScreen(vm: GoldViewModel, contentPadding: PaddingValues) {
                 }
 
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+                val today = java.time.LocalDate.now()
+                if (Gems.isStale(today.year, today.monthValue)) {
+                    Text(
+                        "These ballparks are from ${Gems.PRICES_AS_OF}, " +
+                            "${Gems.ageInMonths(today.year, today.monthValue)} months ago, and may be out of date. " +
+                            "Lab-grown diamond prices in particular have been falling. Tap Edit to use current numbers.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = LocalVerdictColors.current.warn,
+                    )
+                }
                 RangeRow(
                     label = if (gem.natural == null && gem.lab != null) "Natural" else "Natural, ~1 ct",
                     range = natural,

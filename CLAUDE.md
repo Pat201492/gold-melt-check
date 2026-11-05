@@ -24,7 +24,8 @@ app/src/test/  JUnit tests for core/
 - Keep `core/` free of Android imports so it stays unit-testable on the JVM. New math goes there, with tests.
 - Price sources must be free and keyless. If one changes shape, fix `PriceParsers` and its tests together.
 - Never show a bundled estimate as live: anything not fetched is labelled as an estimate or the user's number.
-- Gem price ballparks are static and dated (`Gems.PRICES_AS_OF`); keep the date current whenever you change them,
+- Gem price ballparks are static and dated (`Gems.PRICES_YEAR` / `PRICES_MONTH` / `PRICES_AS_OF`); update all three
+  whenever you change a range (the app warns once they are 6 months old),
   and leave a range null rather than guess one. Lab-grown signs are hints, never presented as proof.
 
 ## Checks

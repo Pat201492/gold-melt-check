@@ -26,8 +26,18 @@ data class Gem(
  * Signs are hints, not proof: many lab stones show none of them, and only a gem lab can be sure.
  */
 object Gems {
-    /** When the price ballparks were compiled. Shown next to every range. */
+    /** When the price ballparks were compiled. Update all three together whenever the ranges change. */
+    const val PRICES_YEAR = 2026
+    const val PRICES_MONTH = 10
     const val PRICES_AS_OF = "Oct 2026"
+
+    /** Ballparks older than this many months get a warning in the app. */
+    const val STALE_AFTER_MONTHS = 6
+
+    /** Whole months between the ballpark date and [year]/[month] (1-12). */
+    fun ageInMonths(year: Int, month: Int): Int = (year - PRICES_YEAR) * 12 + (month - PRICES_MONTH)
+
+    fun isStale(year: Int, month: Int): Boolean = ageInMonths(year, month) >= STALE_AFTER_MONTHS
 
     val general = listOf(
         GemSign(Check.EYE, "A large, flawless, vividly colored stone at a bargain price is the most common warning sign."),
