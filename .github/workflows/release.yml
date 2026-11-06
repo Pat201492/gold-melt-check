@@ -39,6 +39,31 @@ jobs:
           else
             echo "::warning::GMC_KEYSTORE_BASE64 is not set; signing with a throwaway debug key. Each release will need an uninstall before installing."
           fi
+      - name: Bundle a year of gold and silver history
+        # Optional: needs a free gold-api.com key saved as the GOLD_API_KEY repo secret. The key is used here,
+        # at build time, and never ships in the app. 2 requests per release (free tier allows 10/hour).
+        env:
+          GOLD_API_KEY: ${{ secrets.GOLD_API_KEY }}
+        run: |
+          if [ -z "$GOLD_API_KEY" ]; then
+            echo "::warning::GOLD_API_KEY is not set; the app will build its history from its own checks."
+            exit 0
+          fi
+          mkdir -p app/src/main/assets
+          END=$(date -u +%s); START=$((END - 366*24*3600))
+          for SYM in XAU XAG; do
+            OUT="app/src/main/assets/history_${SYM}.json"
+            if curl -fsS --max-time 60 -H "x-api-key: $GOLD_API_KEY" \
+                "https://api.gold-api.com/history?symbol=${SYM}&startTimestamp=${START}&endTimestamp=${END}&groupBy=day&aggregation=avg&orderBy=asc" \
+                -o "$OUT" \
+              && python3 -c "import json,sys; d=json.load(open(sys.argv[1])); assert isinstance(d,list) and len(d)>200, len(d); print(sys.argv[1], len(d), 'days')" "$OUT"; then
+              :
+            else
+              echo "::warning::Could not download ${SYM} history; this release ships without it."
+              rm -f "$OUT"
+            fi
+            sleep 2
+          done
       - name: Work out the version
         run: |
           TAG="${GITHUB_REF_NAME#release/}"

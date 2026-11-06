@@ -25,6 +25,17 @@ object History {
         return (dailyOld + recent).sortedBy { it.at }
     }
 
+    /**
+     * Adds bundled daily history to what the phone has saved. Only days before the earliest saved price are
+     * added, so the app's own checks always win and running this again adds nothing.
+     */
+    fun mergeSeed(saved: List<PricePoint>, seed: List<PricePoint>, now: Long): List<PricePoint> {
+        val firstSaved = saved.firstOrNull()?.at ?: Long.MAX_VALUE
+        val older = seed.filter { it.at < firstSaved && it.at <= now }
+        if (older.isEmpty()) return saved
+        return compact((older + saved).sortedBy { it.at }, now)
+    }
+
     /** Points from [from] (inclusive) to the end. */
     fun since(points: List<PricePoint>, from: Long): List<PricePoint> = points.filter { it.at >= from }
 

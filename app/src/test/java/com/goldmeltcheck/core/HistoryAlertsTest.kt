@@ -32,6 +32,17 @@ class HistoryAlertsTest {
         assertEquals(1, h.size)
     }
 
+    @Test fun seedFillsOnlyBeforeTheFirstSavedPrice() {
+        val seed = daily(100.0, 101.0, 102.0, 103.0, 104.0)          // days 0..4
+        val saved = listOf(PricePoint(t0 + 3 * DAY_MS + HOUR_MS, 200.0)) // the phone's own check on day 3
+        val merged = History.mergeSeed(saved, seed, now = t0 + 5 * DAY_MS)
+        assertEquals(listOf(100.0, 101.0, 102.0, 103.0, 200.0), merged.map { it.usdPerOz })
+        // running it again adds nothing
+        assertEquals(merged, History.mergeSeed(merged, seed, now = t0 + 5 * DAY_MS))
+        // empty phone history takes the whole seed
+        assertEquals(5, History.mergeSeed(emptyList(), seed, now = t0 + 5 * DAY_MS).size)
+    }
+
     @Test fun changePercentNeedsHistoryThatFarBack() {
         val h = daily(100.0, 110.0)
         assertEquals(10.0, History.changePercent(h, DAY_MS)!!, 1e-9)

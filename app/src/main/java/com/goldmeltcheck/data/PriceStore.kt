@@ -176,6 +176,13 @@ class PriceStore(context: Context) {
         return updated
     }
 
+    /** Merges bundled daily history in before the phone's own first saved price. Safe to run every launch. */
+    suspend fun seedHistory(metal: Metal, seed: List<PricePoint>, now: Long) = store.edit { p ->
+        val saved = decodeHistory(p[Keys.history(metal)])
+        val merged = History.mergeSeed(saved, seed, now)
+        if (merged !== saved) p[Keys.history(metal)] = merged.joinToString(";") { "${it.at}:${it.usdPerOz}" }
+    }
+
     /** Alert rules; a fresh install starts with a 4-week-low alert for each metal. */
     val alertRules: Flow<List<AlertRule>> = store.data.map { p ->
         p[Keys.alertRules]?.let(::decodeRules) ?: Alerts.defaults
