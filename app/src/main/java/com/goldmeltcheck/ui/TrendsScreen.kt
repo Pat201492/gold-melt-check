@@ -156,7 +156,17 @@ fun TrendsScreen(vm: GoldViewModel, contentPadding: PaddingValues) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 } else {
-                    TrendChart(visible)
+                    val end = visible.last().at
+                    TrendChart(visible, windowStart = end - span.ms, windowEnd = end)
+                    val have = end - history.first().at
+                    if (have < span.ms - DAY_MS) {
+                        Text(
+                            "Only ${historyLength(have)} of saved prices so far, so the line covers the right-hand " +
+                                "end of this ${span.label} view. It fills in as the app keeps checking.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
                 Text(
                     history.firstOrNull()?.let {
@@ -238,7 +248,7 @@ private fun SpanChip(label: String, selected: Boolean, onClick: () -> Unit) {
  * crosshair you drag to read any saved price.
  */
 @Composable
-private fun TrendChart(points: List<PricePoint>) {
+private fun TrendChart(points: List<PricePoint>, windowStart: Long, windowEnd: Long) {
     val line = MaterialTheme.colorScheme.primary
     val grid = MaterialTheme.colorScheme.outline
     val ink = MaterialTheme.colorScheme.onSurface
@@ -261,20 +271,18 @@ private fun TrendChart(points: List<PricePoint>) {
                 Modifier
                     .weight(1f)
                     .height(180.dp)
-                    .pointerInput(points) {
+                    .pointerInput(points, windowStart) {
                         fun pick(x: Float) {
-                            val t0 = points.first().at
-                            val span = (points.last().at - t0).coerceAtLeast(1)
-                            val target = t0 + (x / size.width).coerceIn(0f, 1f) * span
+                            val span = (windowEnd - windowStart).coerceAtLeast(1)
+                            val target = windowStart + (x / size.width).coerceIn(0f, 1f) * span
                             selected = points.indices.minBy { kotlin.math.abs(points[it].at - target) }
                         }
                         detectTapGestures { pick(it.x) }
                     }
-                    .pointerInput(points) {
+                    .pointerInput(points, windowStart) {
                         fun pick(x: Float) {
-                            val t0 = points.first().at
-                            val span = (points.last().at - t0).coerceAtLeast(1)
-                            val target = t0 + (x / size.width).coerceIn(0f, 1f) * span
+                            val span = (windowEnd - windowStart).coerceAtLeast(1)
+                            val target = windowStart + (x / size.width).coerceIn(0f, 1f) * span
                             selected = points.indices.minBy { kotlin.math.abs(points[it].at - target) }
                         }
                         detectDragGestures(
@@ -285,8 +293,10 @@ private fun TrendChart(points: List<PricePoint>) {
                     },
             ) {
                 val pad = 6.dp.toPx()
-                val t0 = points.first().at
-                val tSpan = (points.last().at - t0).coerceAtLeast(1).toFloat()
+                // The x axis always spans the chosen time frame, so 1W and 1Y look different even
+                // while the saved history is shorter than the frame.
+                val t0 = windowStart
+                val tSpan = (windowEnd - windowStart).coerceAtLeast(1).toFloat()
                 val pSpan = (high - low).takeIf { it > 0 } ?: 1.0
                 fun x(p: PricePoint) = (p.at - t0) / tSpan * size.width
                 fun y(v: Double) = pad + ((high - v) / pSpan).toFloat() * (size.height - 2 * pad)
@@ -327,12 +337,19 @@ private fun TrendChart(points: List<PricePoint>) {
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             val d = DateFormat.getDateInstance(DateFormat.SHORT)
-            AxisLabel(d.format(Date(points.first().at)))
-            AxisLabel(d.format(Date(points.last().at)))
+            AxisLabel(d.format(Date(windowStart)))
+            AxisLabel(d.format(Date(windowEnd)))
         }
         Text("Tap or drag on the chart to read a price.", style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
+}
+
+/** "3 hours", "2 days", "5 weeks": how much history there is, for the short-history note. */
+private fun historyLength(ms: Long): String = when {
+    ms < DAY_MS -> "${(ms / (60 * 60 * 1000)).coerceAtLeast(1)} hours"
+    ms < 2 * WEEK_MS -> "${ms / DAY_MS} days"
+    else -> "${ms / WEEK_MS} weeks"
 }
 
 @Composable
