@@ -76,7 +76,7 @@ object Gems {
                 GemSign(Check.EYE, "Perfectly even, inky colour with no zoning in a cheap stone: possibly synthetic or not Ceylon."),
                 GemSign(Check.LAB, "Heated vs unheated, and Ceylon vs other origins, need a lab (NGJA, GIA, GRS)."),
             ),
-            prices = listOf(r(150.0, 800.0), r(300.0, 2_000.0), r(500.0, 3_000.0), r(800.0, 5_000.0), r(1_500.0, 8_000.0), r(2_500.0, 12_000.0)),
+            prices = listOf(r(150.0, 1_000.0), r(300.0, 3_000.0), r(500.0, 4_000.0), r(800.0, 8_000.0), r(1_500.0, 10_000.0), r(2_500.0, 15_000.0)),
             unheatedPrices = listOf(r(400.0, 2_000.0), r(1_000.0, 5_000.0), r(1_500.0, 7_000.0), r(2_500.0, 10_000.0), r(4_000.0, 18_000.0), none),
         ),
         Gem(
