@@ -57,8 +57,10 @@ data class SavedInputs(
     val pricePerGram: Boolean = false,
     val convertFrom: String = "USD",
     val convertAmount: String = "1",
-    val gemId: String = "diamond",
-    val gemPrice: String = "1000",
-    val gemCurrency: String = "USD",
+    val gemId: String = "blue_sapphire",
+    val gemPrice: String = "330000",
+    val gemCurrency: String = "LKR",
     val gemCarats: String = "1",
+    /** Heat.name: what the seller says about heat treatment. */
+    val gemHeat: String = "UNKNOWN",
 )

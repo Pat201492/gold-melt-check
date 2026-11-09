@@ -11,25 +11,40 @@ enum class Check(val label: String) {
 
 data class GemSign(val check: Check, val text: String)
 
+/**
+ * A gem mined in Sri Lanka. [prices] holds one USD-per-carat ballpark per [Bracket] (in bracket order):
+ * for stones where heat treatment changes the price these are heated stones, and [unheatedPrices] holds the
+ * unheated ones; otherwise [unheatedPrices] is null. A null entry means no reliable figure was found.
+ */
 data class Gem(
     val id: String,
     val name: String,
     val summary: String,
     val signs: List<GemSign>,
-    /** Typical retail USD per carat for about a 1 ct stone; null where no reliable figure was found. */
-    val natural: PriceRange?,
-    val lab: PriceRange?,
-)
+    val prices: List<PriceRange?>,
+    val unheatedPrices: List<PriceRange?>? = null,
+) {
+    val heatMatters: Boolean get() = unheatedPrices != null
+
+    /** The default ballpark for a bracket. Unknown treatment is compared with heated prices, the common case. */
+    fun range(bracket: Bracket, heat: Heat): PriceRange? =
+        if (heat == Heat.UNHEATED && unheatedPrices != null) unheatedPrices[bracket.ordinal] else prices[bracket.ordinal]
+}
+
+private fun r(low: Double, high: Double) = PriceRange(low, high)
+private val none: PriceRange? = null
 
 /**
- * Field guide to lab-grown and imitation stones, plus price ballparks.
- * Signs are hints, not proof: many lab stones show none of them, and only a gem lab can be sure.
+ * Sri Lankan gems: deal ballparks and signs of lab-grown or imitation stones.
+ *
+ * Prices are rough asking prices from Sri Lankan dealers and price guides, USD per carat, compiled Nov 2026.
+ * Street prices in Ratnapura can be lower and tourist-shop prices much higher. Signs are hints, not proof.
  */
 object Gems {
     /** When the price ballparks were compiled. Update all three together whenever the ranges change. */
     const val PRICES_YEAR = 2026
-    const val PRICES_MONTH = 10
-    const val PRICES_AS_OF = "Oct 2026"
+    const val PRICES_MONTH = 11
+    const val PRICES_AS_OF = "Nov 2026"
 
     /** Ballparks older than this many months get a warning in the app. */
     const val STALE_AFTER_MONTHS = 6
@@ -39,147 +54,199 @@ object Gems {
 
     fun isStale(year: Int, month: Int): Boolean = ageInMonths(year, month) >= STALE_AFTER_MONTHS
 
+    /** Buying in Sri Lanka: applies to every stone. */
     val general = listOf(
-        GemSign(Check.EYE, "A large, flawless, vividly colored stone at a bargain price is the most common warning sign."),
-        GemSign(Check.EYE, "Ask for the lab report and read it. \"Laboratory-grown\", \"synthetic\" or \"created\" on it settles the question."),
-        GemSign(Check.LOUPE, "Look for a laser inscription on the girdle (the thin outer edge). Lab-grown diamonds are often inscribed \"LG\" or \"Lab Grown\" with a report number."),
-        GemSign(Check.LAB, "Lab-grown stones are the same material as natural ones. Standard testers pass them. For anything expensive, only a gem lab (GIA, IGI, AGL, Gübelin, SSEF) can confirm natural origin."),
+        GemSign(Check.LAB, "Ask for a certificate from the NGJA (National Gem & Jewellery Authority) gem testing lab in Colombo, or have the stone tested there before paying for anything valuable. A dealer who refuses is a warning sign."),
+        GemSign(Check.EYE, "Buy from NGJA-licensed dealers and keep the official receipt. You'll want it, and the certificate, if you take the stone out of the country."),
+        GemSign(Check.EYE, "\"Unheated\" is the most common false claim, and it can double or triple the price. Only a lab report settles it."),
+        GemSign(Check.EYE, "Walk away from street touts, \"mine visits\" with a surprise sale at the end, and offers to resell the stone abroad for a profit."),
+        GemSign(Check.EYE, "Geuda is milky low-grade sapphire that is heated to turn blue. It's legitimate when sold as heated, but it's often passed off as natural unheated."),
+        GemSign(Check.LAB, "Lab-grown stones are the same material as natural ones and pass standard testers. Glass and synthetic sapphire imitations are common in tourist areas."),
     )
 
     val all = listOf(
         Gem(
-            id = "diamond",
-            name = "Diamond",
-            summary = "Lab diamonds are real diamond, so a standard diamond tester passes them. The clues are inclusions, glow under UV, and the paperwork.",
+            id = "blue_sapphire",
+            name = "Blue sapphire",
+            summary = "Ceylon blue is lighter and brighter than most other origins. Most is heated; unheated, certified stones cost 2–3× more.",
             signs = listOf(
-                GemSign(Check.EYE, "Near-colorless and nearly flawless at well under natural prices: lab diamonds sell for a small fraction of natural ones."),
-                GemSign(Check.LOUPE, "Shiny dark metallic specks or rods: flux metal left by HPHT growth. Natural diamonds don't contain metal."),
-                GemSign(Check.LOUPE, "Dark pinpoint specks of graphite, or faint parallel banding: common in CVD-grown diamonds."),
-                GemSign(Check.LOUPE, "Natural diamonds tend to show tiny crystals of other minerals, feathers and clouds rather than metal."),
-                GemSign(Check.TOOL, "A strong magnet that tugs the loose stone points to metallic HPHT inclusions."),
-                GemSign(Check.UV, "Glowing after the UV light switches off (phosphorescence), or orange to red fluorescence, is more typical of lab diamonds. Many natural diamonds glow blue, but many don't glow at all, so absence proves nothing."),
-                GemSign(Check.LAB, "Telling lab from natural for certain needs lab screening equipment, or a GIA or IGI report."),
+                GemSign(Check.LOUPE, "Curved growth lines or round gas bubbles: lab-made (flame-fusion) sapphire. Natural growth lines are straight or angular."),
+                GemSign(Check.LOUPE, "Fine needle-like \"silk\" in a natural pattern points to natural and often unheated. Heating dissolves silk into dots or makes it vanish."),
+                GemSign(Check.LOUPE, "Glass-like filling in surface-reaching cracks, with bubbles or a flash when tilted: a glass-filled stone, worth far less."),
+                GemSign(Check.EYE, "Perfectly even, inky colour with no zoning in a cheap stone: possibly synthetic or not Ceylon."),
+                GemSign(Check.LAB, "Heated vs unheated, and Ceylon vs other origins, need a lab (NGJA, GIA, GRS)."),
             ),
-            natural = PriceRange(3_500.0, 6_000.0),
-            lab = PriceRange(250.0, 1_500.0),
+            prices = listOf(r(150.0, 800.0), r(300.0, 2_000.0), r(500.0, 3_000.0), r(800.0, 5_000.0), r(1_500.0, 8_000.0), r(2_500.0, 12_000.0)),
+            unheatedPrices = listOf(r(400.0, 2_000.0), r(1_000.0, 5_000.0), r(1_500.0, 7_000.0), r(2_500.0, 10_000.0), r(4_000.0, 18_000.0), none),
+        ),
+        Gem(
+            id = "padparadscha",
+            name = "Padparadscha",
+            summary = "Sri Lanka's pink-orange \"lotus\" sapphire, the most valuable sapphire colour. Prices rise very steeply above 2 ct.",
+            signs = listOf(
+                GemSign(Check.EYE, "Too orange, too pink, or colour that sits only on the surface: likely beryllium-treated or not true padparadscha."),
+                GemSign(Check.LOUPE, "Colour concentrated in a thin outer layer seen from the side: surface diffusion treatment."),
+                GemSign(Check.LOUPE, "Curved growth lines or gas bubbles: lab-made."),
+                GemSign(Check.LAB, "Padparadscha is one of the most faked stones. Insist on a lab report that names the colour \"padparadscha\" and states the treatment."),
+            ),
+            prices = listOf(r(800.0, 3_000.0), r(1_500.0, 5_000.0), r(2_000.0, 6_000.0), none, none, none),
+            unheatedPrices = listOf(r(1_500.0, 5_000.0), r(2_500.0, 10_000.0), r(4_000.0, 15_000.0), r(6_000.0, 25_000.0), none, none),
+        ),
+        Gem(
+            id = "yellow_sapphire",
+            name = "Yellow sapphire",
+            summary = "Popular in Sri Lanka and India (pukhraj). Conventional heating is common; beryllium-treated stones are far cheaper.",
+            signs = listOf(
+                GemSign(Check.EYE, "Very bright orange-yellow at a low price: often beryllium-treated, worth a fraction of conventionally heated stones."),
+                GemSign(Check.LOUPE, "Curved lines or gas bubbles: lab-made."),
+                GemSign(Check.TOOL, "Yellow glass and citrine are sold as yellow sapphire. A refractometer or the NGJA lab tells them apart quickly."),
+                GemSign(Check.LAB, "Unheated and beryllium-free status needs a lab report."),
+            ),
+            prices = listOf(r(150.0, 600.0), r(350.0, 1_000.0), r(400.0, 1_200.0), r(500.0, 1_500.0), r(600.0, 2_000.0), none),
+            unheatedPrices = listOf(r(400.0, 1_500.0), r(800.0, 3_500.0), r(1_200.0, 5_000.0), r(1_500.0, 8_000.0), r(1_800.0, 10_000.0), none),
+        ),
+        Gem(
+            id = "pink_sapphire",
+            name = "Pink sapphire",
+            summary = "Ceylon pinks are usually light to medium pink. Beryllium-treated pinks sell for under \$10 a carat.",
+            signs = listOf(
+                GemSign(Check.EYE, "Very cheap, intensely coloured pink: likely beryllium-treated or synthetic."),
+                GemSign(Check.LOUPE, "Curved lines or gas bubbles: lab-made."),
+                GemSign(Check.LAB, "Ruby vs pink sapphire, and treatment, need a lab report."),
+            ),
+            prices = listOf(r(150.0, 800.0), r(300.0, 1_500.0), r(500.0, 2_000.0), r(700.0, 2_500.0), none, none),
+            unheatedPrices = listOf(r(500.0, 1_500.0), r(1_100.0, 2_900.0), none, none, none, none),
+        ),
+        Gem(
+            id = "white_sapphire",
+            name = "White sapphire",
+            summary = "Colourless sapphire, valued for clarity and cut. Often sold as a diamond alternative.",
+            signs = listOf(
+                GemSign(Check.EYE, "Lots of rainbow fire: likely cubic zirconia or glass. Sapphire shows little fire."),
+                GemSign(Check.LOUPE, "Rounded facet edges and gas bubbles: glass."),
+                GemSign(Check.TOOL, "White topaz and quartz are swapped in. A refractometer or the NGJA lab tells them apart."),
+            ),
+            prices = listOf(r(50.0, 300.0), r(100.0, 600.0), r(150.0, 800.0), r(200.0, 1_000.0), r(300.0, 1_500.0), none),
+        ),
+        Gem(
+            id = "star_sapphire",
+            name = "Star sapphire",
+            summary = "Cut as a dome to show a six-rayed star. Priced on how sharp and centred the star is.",
+            signs = listOf(
+                GemSign(Check.EYE, "A perfectly sharp, bright star on a very even body colour: typical of lab-made (Linde-type) star sapphire."),
+                GemSign(Check.EYE, "A star that looks painted on, or stays put when you move the light: imitation or backed stone."),
+                GemSign(Check.LOUPE, "Gas bubbles or curved lines in the dome: lab-made."),
+            ),
+            prices = listOf(none, r(100.0, 1_500.0), r(100.0, 2_000.0), r(150.0, 3_000.0), r(200.0, 5_000.0), none),
         ),
         Gem(
             id = "ruby",
             name = "Ruby",
-            summary = "Cheap lab ruby has been made for over a century. Look for curved lines and bubbles, and watch for glass-filled stones sold as ruby.",
+            summary = "Sri Lankan rubies tend toward lighter pinkish-red. Most are heated; glass-filled rubies are common and worth little.",
             signs = listOf(
-                GemSign(Check.LOUPE, "Curved growth lines, like the grooves of a record: flame-fusion lab ruby. Natural ruby's growth lines and color bands are straight or angular."),
-                GemSign(Check.LOUPE, "Round or stretched gas bubbles: a lab stone, or glass filling in a treated stone."),
-                GemSign(Check.LOUPE, "Wispy \"fingerprint\" veils and shiny triangular or hexagonal metal platelets: flux-grown lab ruby."),
-                GemSign(Check.LOUPE, "Bubbles in surface-reaching cracks and a blue or orange flash when tilted: lead-glass-filled ruby. It is sold cheaply as \"ruby\" but is part glass and fragile."),
-                GemSign(Check.LOUPE, "Fine needle-like \"silk\" and mineral crystals suggest natural, though heat treatment can change them."),
-                GemSign(Check.UV, "Lab ruby often glows a very strong red, but so do some natural rubies, so treat it as a weak hint."),
-                GemSign(Check.LAB, "Most natural rubies are heat-treated, which is normal. Origin, heat and glass filling need a lab report."),
+                GemSign(Check.LOUPE, "Bubbles in cracks and a blue or orange flash when tilted: lead-glass-filled. Fragile and worth a small fraction of real ruby."),
+                GemSign(Check.LOUPE, "Curved growth lines or gas bubbles: lab-made."),
+                GemSign(Check.UV, "A very strong red glow is typical of lab ruby, but some natural rubies glow too."),
+                GemSign(Check.LAB, "Heating, glass filling and origin need a lab report."),
             ),
-            natural = PriceRange(500.0, 10_000.0),
-            lab = PriceRange(5.0, 500.0),
+            prices = listOf(r(100.0, 400.0), r(150.0, 800.0), r(300.0, 2_000.0), r(500.0, 3_000.0), none, none),
+            unheatedPrices = listOf(none, none, r(3_000.0, 15_000.0), r(3_000.0, 15_000.0), none, none),
         ),
         Gem(
-            id = "sapphire",
-            name = "Sapphire",
-            summary = "Same mineral as ruby, with the same clues. Blue lab sapphire is very cheap, so a bargain clean vivid blue deserves a closer look.",
+            id = "cats_eye",
+            name = "Cat's eye (chrysoberyl)",
+            summary = "Sri Lanka is the classic source. The finest show a sharp eye on a \"milk and honey\" body. Eye sharpness matters more than size.",
             signs = listOf(
-                GemSign(Check.LOUPE, "Curved color bands or growth lines: flame-fusion lab sapphire. Natural sapphire shows straight, angular, often hexagonal color zoning."),
-                GemSign(Check.LOUPE, "Gas bubbles, round or stretched: lab-grown."),
-                GemSign(Check.LOUPE, "\"Fingerprint\" flux veils or metallic platelets: flux-grown lab sapphire."),
-                GemSign(Check.LOUPE, "Rutile silk, mineral crystals and natural fingerprints point to natural, but heating can alter them."),
-                GemSign(Check.UV, "A chalky bluish-white or greenish glow under short-wave UV is typical of blue lab sapphire."),
-                GemSign(Check.LAB, "Diffusion treatment, heating and origin need a lab report."),
+                GemSign(Check.EYE, "Visible parallel fibres or a honeycomb pattern on the sides: glass fibre-optic imitation."),
+                GemSign(Check.EYE, "A cheap, greenish or greyish stone sold as \"cat's eye\": often quartz cat's eye, worth far less than chrysoberyl."),
+                GemSign(Check.EYE, "Shine a light from one side: in fine chrysoberyl one half glows milky and the other stays honey-coloured."),
+                GemSign(Check.TOOL, "Chrysoberyl feels heavy for its size. A scale or the NGJA lab separates it from quartz."),
             ),
-            natural = PriceRange(500.0, 12_000.0),
-            lab = PriceRange(30.0, 200.0),
-        ),
-        Gem(
-            id = "emerald",
-            name = "Emerald",
-            summary = "Natural emeralds are almost always visibly included and usually oiled. A clean, vivid, cheap emerald is the red flag.",
-            signs = listOf(
-                GemSign(Check.EYE, "Eye-clean, intensely green and inexpensive: natural emeralds nearly always show inclusions (the \"jardin\")."),
-                GemSign(Check.LOUPE, "Zig-zag or chevron growth patterns: hydrothermal lab emerald."),
-                GemSign(Check.LOUPE, "\"Nail-head spicules\": tapered tubes with a tiny crystal at the wide end, typical of hydrothermal lab emerald."),
-                GemSign(Check.LOUPE, "Wispy veils or metallic platelets: flux-grown lab emerald."),
-                GemSign(Check.LOUPE, "Three-phase inclusions (a pocket holding liquid, a gas bubble and a tiny crystal), mica flakes or pyrite point to natural."),
-                GemSign(Check.UV, "A strong red glow under long-wave UV is common in lab emerald. Most natural emeralds glow weakly or not at all."),
-                GemSign(Check.LAB, "The amount of oil or resin filling, and origin, need a lab report."),
-            ),
-            natural = PriceRange(3_000.0, 10_000.0),
-            lab = PriceRange(300.0, 1_000.0),
-        ),
-        Gem(
-            id = "moissanite",
-            name = "Moissanite",
-            summary = "Always lab-made. The question is whether a \"diamond\" is really moissanite, which many basic diamond testers pass.",
-            signs = listOf(
-                GemSign(Check.LOUPE, "Doubled facet edges: look through the top at an angle toward the back facets. Moissanite shows each edge twice; diamond never does."),
-                GemSign(Check.EYE, "Strong rainbow \"disco ball\" flashes, more than a diamond of the same size gives."),
-                GemSign(Check.EYE, "Older moissanite often has a faint yellow or green tint."),
-                GemSign(Check.LOUPE, "Thin needle-like inclusions running parallel to each other."),
-                GemSign(Check.TOOL, "A basic heat-based diamond tester can read moissanite as diamond. A moissanite or multi-tester, which also checks electrical conductivity, tells them apart."),
-            ),
-            natural = null,
-            lab = PriceRange(50.0, 800.0),
+            prices = listOf(r(100.0, 400.0), r(100.0, 600.0), r(300.0, 2_500.0), r(500.0, 2_500.0), r(1_500.0, 10_000.0), none),
         ),
         Gem(
             id = "alexandrite",
             name = "Alexandrite",
-            summary = "Changes color: green to bluish green in daylight, red to purple under warm indoor light. Natural stones are rare; many \"alexandrites\" are lab-made or not alexandrite at all.",
+            summary = "Changes colour from green in daylight to red or purple under warm light. Ceylon alexandrite is rare; many \"alexandrites\" are lab-made.",
             signs = listOf(
-                GemSign(Check.EYE, "A large, clean stone with a dramatic color change at a modest price is very likely lab-grown."),
-                GemSign(Check.EYE, "Lavender-blue turning to purple-pink is lab color-change sapphire or spinel, often sold as \"alexandrite\". True alexandrite goes green to red."),
-                GemSign(Check.LOUPE, "Curved lines and gas bubbles mean color-change lab corundum, not alexandrite."),
-                GemSign(Check.LOUPE, "Metallic platelets or flux veils: flux-grown lab alexandrite. Very clean stones may be pulled lab crystals."),
-                GemSign(Check.LOUPE, "Fine needles, fingerprints and step-like twinning lines point to natural."),
+                GemSign(Check.EYE, "Lavender-blue turning purple-pink: lab colour-change sapphire or spinel, not alexandrite."),
+                GemSign(Check.EYE, "A large, clean stone with a dramatic colour change at a modest price: very likely lab-grown."),
+                GemSign(Check.LOUPE, "Curved lines and gas bubbles: lab colour-change corundum."),
                 GemSign(Check.LAB, "Natural alexandrite is valuable enough that a lab report is worth getting."),
             ),
-            natural = PriceRange(500.0, 10_000.0),
-            lab = null,
+            prices = listOf(none, none, none, none, none, none),
         ),
         Gem(
             id = "spinel",
             name = "Spinel",
-            summary = "Natural spinel is prized in its own right. Lab spinel is cheap and is also used to imitate aquamarine and blue sapphire.",
+            summary = "Sri Lanka produces pink, purple, red and rare cobalt-blue spinel. Cobalt blue sells far above the ranges here.",
             signs = listOf(
-                GemSign(Check.LOUPE, "Gas bubbles: flame-fusion lab spinel."),
-                GemSign(Check.LOUPE, "Rows of tiny octahedral crystals, like little pyramids point to point, are classic natural spinel."),
-                GemSign(Check.TOOL, "Under a polariscope, a criss-cross \"tatami\" strain pattern suggests lab spinel. Natural spinel usually stays dark."),
-                GemSign(Check.EYE, "A cheap \"aquamarine\" or \"blue sapphire\" that is unusually bright may be lab spinel."),
-                GemSign(Check.LAB, "Fine natural spinel (red, pink, cobalt blue) is worth a lab report."),
+                GemSign(Check.LOUPE, "Gas bubbles: lab-made (flame-fusion) spinel."),
+                GemSign(Check.LOUPE, "Tiny octahedral crystals, often in rows: classic natural spinel."),
+                GemSign(Check.EYE, "A cheap \"blue sapphire\" or \"aquamarine\" with unusual brightness may be lab spinel."),
             ),
-            natural = null,
-            lab = null,
+            prices = listOf(r(100.0, 800.0), r(200.0, 1_500.0), r(300.0, 2_000.0), r(400.0, 2_500.0), none, none),
         ),
         Gem(
-            id = "opal",
-            name = "Opal",
-            summary = "Lab opal, plastic and glass imitations, and thin slices glued onto a backing (doublets and triplets) are all common.",
+            id = "moonstone",
+            name = "Moonstone",
+            summary = "Sri Lanka's best moonstone shows a floating blue sheen. Most is inexpensive; strong blue flash costs more.",
             signs = listOf(
-                GemSign(Check.LOUPE, "A \"lizard skin\", snakeskin or honeycomb pattern inside each color patch, too regular and repeating: lab (Gilson-type) opal."),
-                GemSign(Check.EYE, "Look at the side: a straight join line and a dark backing mean a doublet. A clear domed cap on top means a triplet. Both are worth far less than solid opal."),
-                GemSign(Check.EYE, "Very light and warm to the touch: plastic imitation. Glass imitations show bubbles and swirls."),
-                GemSign(Check.EYE, "Natural opal's color patches are irregular and change as you tilt it, often with patches of plain \"potch\"."),
-                GemSign(Check.LAB, "Telling some lab opals from natural without magnification work, and checking for treatments, needs a lab."),
+                GemSign(Check.EYE, "An even bluish glow across the whole stone, the same from every angle: glass \"opalite\", not moonstone."),
+                GemSign(Check.EYE, "Real moonstone's sheen moves and shows only at certain angles."),
+                GemSign(Check.LOUPE, "Gas bubbles or swirls: glass."),
             ),
-            natural = null,
-            lab = null,
+            prices = listOf(r(5.0, 40.0), r(7.0, 60.0), r(10.0, 100.0), r(20.0, 200.0), r(30.0, 300.0), none),
         ),
         Gem(
-            id = "quartz",
-            name = "Quartz / Amethyst",
-            summary = "Lab amethyst and citrine are common and chemically identical to natural. Prices are low enough that testing is rarely worth it.",
+            id = "hessonite",
+            name = "Garnet (hessonite)",
+            summary = "Cinnamon-orange garnet (gomedh), common in Sri Lanka. Orange spessartite garnet costs more.",
             signs = listOf(
-                GemSign(Check.EYE, "Perfectly even color with no zoning at all is a hint toward lab-grown."),
-                GemSign(Check.LOUPE, "Angular color bands, \"tiger stripe\" or \"zebra\" zoning and natural fingerprints point to natural amethyst."),
-                GemSign(Check.LOUPE, "\"Breadcrumb\" specks or a visible flat seed plate: lab-grown quartz."),
-                GemSign(Check.EYE, "Most citrine sold is heated amethyst, giving a strong orange-brown or reddish color. Natural citrine is usually pale yellow."),
-                GemSign(Check.LAB, "A clean stone can only be confirmed in a lab, which is rarely worth it at these prices."),
+                GemSign(Check.LOUPE, "A wavy, \"heat haze\" look inside is typical of natural hessonite."),
+                GemSign(Check.LOUPE, "Gas bubbles and rounded facet edges: glass."),
             ),
-            natural = PriceRange(2.0, 60.0),
-            lab = null,
+            prices = listOf(r(20.0, 150.0), r(50.0, 300.0), r(50.0, 300.0), r(50.0, 300.0), r(50.0, 300.0), none),
+        ),
+        Gem(
+            id = "zircon",
+            name = "Zircon",
+            summary = "Natural zircon, not cubic zirconia. Bright blue zircon is heat-treated as standard.",
+            signs = listOf(
+                GemSign(Check.LOUPE, "Doubled facet edges seen through the top: zircon. Glass and cubic zirconia never show it."),
+                GemSign(Check.EYE, "Strong rainbow fire on a cheap \"zircon\": check it isn't cubic zirconia."),
+            ),
+            prices = listOf(r(20.0, 150.0), r(50.0, 250.0), r(50.0, 300.0), r(50.0, 300.0), r(100.0, 500.0), none),
+        ),
+        Gem(
+            id = "topaz",
+            name = "Topaz",
+            summary = "Mostly colourless or pale. Bright \"London\" or \"Swiss\" blue topaz is irradiated, which is normal.",
+            signs = listOf(
+                GemSign(Check.LOUPE, "Gas bubbles and rounded facet edges: glass."),
+                GemSign(Check.TOOL, "Topaz is sometimes sold as aquamarine or white sapphire. The NGJA lab separates them quickly."),
+            ),
+            prices = listOf(none, none, none, none, none, none),
+        ),
+        Gem(
+            id = "tourmaline",
+            name = "Tourmaline",
+            summary = "Sri Lanka produces yellow, brown and green tourmaline in smaller amounts.",
+            signs = listOf(
+                GemSign(Check.LOUPE, "Doubled facet edges in larger stones point to tourmaline; glass shows none."),
+                GemSign(Check.LOUPE, "Gas bubbles and swirls: glass."),
+            ),
+            prices = listOf(none, none, none, none, none, none),
+        ),
+        Gem(
+            id = "aquamarine",
+            name = "Aquamarine",
+            summary = "Pale blue to blue-green beryl, found in smaller amounts in Sri Lanka.",
+            signs = listOf(
+                GemSign(Check.TOOL, "Blue topaz and lab spinel are sold as aquamarine. A refractometer or the NGJA lab tells them apart."),
+                GemSign(Check.LOUPE, "Gas bubbles: glass or lab spinel."),
+            ),
+            prices = listOf(none, none, none, none, none, none),
         ),
     )
 
