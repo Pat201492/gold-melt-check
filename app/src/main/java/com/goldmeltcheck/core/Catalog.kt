@@ -27,6 +27,7 @@ object Catalog {
         Currency("VND", "Vietnamese dong", 26300.0),
         Currency("PKR", "Pakistani rupee", 281.0),
         Currency("ZAR", "South African rand", 17.4),
+        Currency("LKR", "Sri Lankan rupee", 330.0),
     )
 
     fun currency(code: String): Currency = currencies.firstOrNull { it.code == code } ?: currencies.first()

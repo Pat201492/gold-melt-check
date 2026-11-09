@@ -8,7 +8,7 @@ and shows it as a percent of melt value. See README.md for the user-facing behav
 ```
 app/src/main/java/com/goldmeltcheck/
   core/   pure Kotlin: MeltMath, Metal (gold/silver: purities, bands), Catalog (currencies), PriceParsers, GemMath, Gems
-          (lab-grown signs + dated price ballparks), History + Alerts (trend stats, alert rules). No Android imports.
+          (Sri Lankan gems: per-size, heated/unheated price ballparks, deal verdicts, lab-grown signs), History + Alerts (trend stats, alert rules). No Android imports.
   data/   PriceStore (DataStore cache + price history), PriceApi (HTTP), PriceSync (WorkManager), PriceAlerts (notifications)
   ui/     GoldScreen (Check), RatesScreen (Metal Rates), TrendsScreen (Trends), CurrencyScreen (Currency Rates), GemsScreen (Gems), GoldViewModel, Theme
 app/src/test/  JUnit tests for core/
@@ -24,7 +24,11 @@ app/src/test/  JUnit tests for core/
 - Keep `core/` free of Android imports so it stays unit-testable on the JVM. New math goes there, with tests.
 - Price sources must be free and keyless. If one changes shape, fix `PriceParsers` and its tests together.
 - Never show a bundled estimate as live: anything not fetched is labelled as an estimate or the user's number.
-- Gem price ballparks are static and dated (`Gems.PRICES_AS_OF`); keep the date current whenever you change them,
+- The Gems tab is Sri Lanka focused: Sri Lankan stones only, prices in USD and LKR, one ballpark per carat
+  bracket (`Bracket`), heated/unheated where heat changes the price. Ballparks are typical Sri Lankan dealer
+  asking prices (local market), not Western retail.
+- Gem price ballparks are static and dated (`Gems.PRICES_YEAR` / `PRICES_MONTH` / `PRICES_AS_OF`); update all three
+  whenever you change a range (the app warns once they are 6 months old),
   and leave a range null rather than guess one. Lab-grown signs are hints, never presented as proof.
 
 ## Checks

@@ -50,6 +50,7 @@ class PriceStore(context: Context) {
         val gemPrice = stringPreferencesKey("gem_price")
         val gemCurrency = stringPreferencesKey("gem_currency")
         val gemCarats = stringPreferencesKey("gem_carats")
+        val gemHeat = stringPreferencesKey("gem_heat")
         val gemRanges = stringPreferencesKey("gem_range_overrides")
         fun history(metal: Metal) = stringPreferencesKey("history_${metal.name}")
         val alertRules = stringPreferencesKey("alert_rules")
@@ -88,6 +89,7 @@ class PriceStore(context: Context) {
             gemPrice = p[Keys.gemPrice] ?: d.gemPrice,
             gemCurrency = p[Keys.gemCurrency] ?: d.gemCurrency,
             gemCarats = p[Keys.gemCarats] ?: d.gemCarats,
+            gemHeat = p[Keys.gemHeat] ?: d.gemHeat,
         )
     }
 
@@ -135,9 +137,10 @@ class PriceStore(context: Context) {
         it[Keys.gemPrice] = inputs.gemPrice
         it[Keys.gemCurrency] = inputs.gemCurrency
         it[Keys.gemCarats] = inputs.gemCarats
+        it[Keys.gemHeat] = inputs.gemHeat
     }
 
-    /** Price ranges the person edited, keyed "gemId:natural" or "gemId:lab". */
+    /** Price ranges the person edited, keyed "gemId:H:bracket" (heated or any) or "gemId:U:bracket" (unheated). */
     val gemRangeOverrides: Flow<Map<String, PriceRange>> = store.data.map { p ->
         decodeRanges(p[Keys.gemRanges])
     }
