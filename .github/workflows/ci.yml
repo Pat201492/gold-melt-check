@@ -22,6 +22,14 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v5
+      - name: Download Gradle (retries on a slow server)
+        run: |
+          for i in 1 2 3 4 5; do
+            ./gradlew --no-daemon --version && exit 0
+            [ "$i" -lt 5 ] || break
+            echo "Gradle download attempt $i failed; retrying in $((30 * i))s"; sleep $((30 * i))
+          done
+          exit 1
       - name: Unit tests
         run: ./gradlew --no-daemon testDebugUnitTest
       - name: Build debug APK
