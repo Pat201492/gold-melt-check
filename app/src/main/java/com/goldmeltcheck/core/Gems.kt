@@ -77,7 +77,7 @@ object Gems {
                 GemSign(Check.LAB, "Heated vs unheated, and Ceylon vs other origins, need a lab (NGJA, GIA, GRS)."),
             ),
             prices = listOf(r(150.0, 1_000.0), r(300.0, 3_000.0), r(500.0, 4_000.0), r(800.0, 8_000.0), r(1_500.0, 10_000.0), r(2_500.0, 15_000.0)),
-            unheatedPrices = listOf(r(400.0, 2_000.0), r(1_000.0, 5_000.0), r(1_500.0, 7_000.0), r(2_500.0, 10_000.0), r(4_000.0, 18_000.0), none),
+            unheatedPrices = listOf(r(400.0, 2_000.0), r(1_000.0, 5_000.0), r(1_500.0, 7_000.0), r(2_500.0, 10_000.0), r(4_000.0, 18_000.0), r(6_000.0, 25_000.0)),
         ),
         Gem(
             id = "padparadscha",
@@ -89,8 +89,8 @@ object Gems {
                 GemSign(Check.LOUPE, "Curved growth lines or gas bubbles: lab-made."),
                 GemSign(Check.LAB, "Padparadscha is one of the most faked stones. Insist on a lab report that names the colour \"padparadscha\" and states the treatment."),
             ),
-            prices = listOf(r(800.0, 3_000.0), r(1_500.0, 5_000.0), r(2_000.0, 6_000.0), none, none, none),
-            unheatedPrices = listOf(r(1_500.0, 5_000.0), r(2_500.0, 10_000.0), r(4_000.0, 15_000.0), r(6_000.0, 25_000.0), none, none),
+            prices = listOf(r(800.0, 3_000.0), r(1_500.0, 5_000.0), r(2_000.0, 6_000.0), r(2_500.0, 8_000.0), r(3_000.0, 10_000.0), none),
+            unheatedPrices = listOf(r(1_500.0, 5_000.0), r(2_500.0, 10_000.0), r(4_000.0, 15_000.0), r(6_000.0, 25_000.0), r(8_000.0, 35_000.0), none),
         ),
         Gem(
             id = "yellow_sapphire",
@@ -102,8 +102,8 @@ object Gems {
                 GemSign(Check.TOOL, "Yellow glass and citrine are sold as yellow sapphire. A refractometer or the NGJA lab tells them apart quickly."),
                 GemSign(Check.LAB, "Unheated and beryllium-free status needs a lab report."),
             ),
-            prices = listOf(r(150.0, 600.0), r(350.0, 1_000.0), r(400.0, 1_200.0), r(500.0, 1_500.0), r(600.0, 2_000.0), none),
-            unheatedPrices = listOf(r(400.0, 1_500.0), r(800.0, 3_500.0), r(1_200.0, 5_000.0), r(1_500.0, 8_000.0), r(1_800.0, 10_000.0), none),
+            prices = listOf(r(150.0, 600.0), r(350.0, 1_000.0), r(400.0, 1_200.0), r(500.0, 1_500.0), r(600.0, 2_000.0), r(600.0, 2_500.0)),
+            unheatedPrices = listOf(r(400.0, 1_500.0), r(800.0, 3_500.0), r(1_200.0, 5_000.0), r(1_500.0, 8_000.0), r(1_800.0, 10_000.0), r(2_000.0, 12_000.0)),
         ),
         Gem(
             id = "pink_sapphire",
@@ -114,8 +114,8 @@ object Gems {
                 GemSign(Check.LOUPE, "Curved lines or gas bubbles: lab-made."),
                 GemSign(Check.LAB, "Ruby vs pink sapphire, and treatment, need a lab report."),
             ),
-            prices = listOf(r(150.0, 800.0), r(300.0, 1_500.0), r(500.0, 2_000.0), r(700.0, 2_500.0), none, none),
-            unheatedPrices = listOf(r(500.0, 1_500.0), r(1_100.0, 2_900.0), none, none, none, none),
+            prices = listOf(r(150.0, 800.0), r(300.0, 1_500.0), r(500.0, 2_000.0), r(700.0, 2_500.0), r(800.0, 3_500.0), none),
+            unheatedPrices = listOf(r(500.0, 1_500.0), r(1_100.0, 2_900.0), r(1_200.0, 3_500.0), r(1_500.0, 4_500.0), r(2_000.0, 6_000.0), none),
         ),
         Gem(
             id = "white_sapphire",
@@ -126,7 +126,7 @@ object Gems {
                 GemSign(Check.LOUPE, "Rounded facet edges and gas bubbles: glass."),
                 GemSign(Check.TOOL, "White topaz and quartz are swapped in. A refractometer or the NGJA lab tells them apart."),
             ),
-            prices = listOf(r(50.0, 300.0), r(100.0, 600.0), r(150.0, 800.0), r(200.0, 1_000.0), r(300.0, 1_500.0), none),
+            prices = listOf(r(50.0, 300.0), r(100.0, 600.0), r(150.0, 800.0), r(200.0, 1_000.0), r(300.0, 1_500.0), r(300.0, 2_000.0)),
         ),
         Gem(
             id = "star_sapphire",
@@ -137,7 +137,7 @@ object Gems {
                 GemSign(Check.EYE, "A star that looks painted on, or stays put when you move the light: imitation or backed stone."),
                 GemSign(Check.LOUPE, "Gas bubbles or curved lines in the dome: lab-made."),
             ),
-            prices = listOf(none, r(100.0, 1_500.0), r(100.0, 2_000.0), r(150.0, 3_000.0), r(200.0, 5_000.0), none),
+            prices = listOf(r(50.0, 500.0), r(100.0, 1_500.0), r(100.0, 2_000.0), r(150.0, 3_000.0), r(200.0, 5_000.0), none),
         ),
         Gem(
             id = "ruby",
@@ -149,8 +149,8 @@ object Gems {
                 GemSign(Check.UV, "A very strong red glow is typical of lab ruby, but some natural rubies glow too."),
                 GemSign(Check.LAB, "Heating, glass filling and origin need a lab report."),
             ),
-            prices = listOf(r(100.0, 400.0), r(150.0, 800.0), r(300.0, 2_000.0), r(500.0, 3_000.0), none, none),
-            unheatedPrices = listOf(none, none, r(3_000.0, 15_000.0), r(3_000.0, 15_000.0), none, none),
+            prices = listOf(r(100.0, 400.0), r(150.0, 800.0), r(300.0, 2_000.0), r(500.0, 3_000.0), r(800.0, 4_000.0), none),
+            unheatedPrices = listOf(r(400.0, 2_000.0), r(1_000.0, 6_000.0), r(3_000.0, 15_000.0), r(3_000.0, 15_000.0), r(4_000.0, 20_000.0), none),
         ),
         Gem(
             id = "cats_eye",
@@ -162,7 +162,7 @@ object Gems {
                 GemSign(Check.EYE, "Shine a light from one side: in fine chrysoberyl one half glows milky and the other stays honey-coloured."),
                 GemSign(Check.TOOL, "Chrysoberyl feels heavy for its size. A scale or the NGJA lab separates it from quartz."),
             ),
-            prices = listOf(r(100.0, 400.0), r(100.0, 600.0), r(300.0, 2_500.0), r(500.0, 2_500.0), r(1_500.0, 10_000.0), none),
+            prices = listOf(r(100.0, 400.0), r(100.0, 600.0), r(300.0, 2_500.0), r(500.0, 2_500.0), r(1_500.0, 10_000.0), r(1_500.0, 12_000.0)),
         ),
         Gem(
             id = "alexandrite",
@@ -174,7 +174,7 @@ object Gems {
                 GemSign(Check.LOUPE, "Curved lines and gas bubbles: lab colour-change corundum."),
                 GemSign(Check.LAB, "Natural alexandrite is valuable enough that a lab report is worth getting."),
             ),
-            prices = listOf(none, none, none, none, none, none),
+            prices = listOf(r(500.0, 3_000.0), r(1_000.0, 6_000.0), r(1_500.0, 8_000.0), r(2_000.0, 10_000.0), r(3_000.0, 15_000.0), none),
         ),
         Gem(
             id = "spinel",
@@ -185,7 +185,7 @@ object Gems {
                 GemSign(Check.LOUPE, "Tiny octahedral crystals, often in rows: classic natural spinel."),
                 GemSign(Check.EYE, "A cheap \"blue sapphire\" or \"aquamarine\" with unusual brightness may be lab spinel."),
             ),
-            prices = listOf(r(100.0, 800.0), r(200.0, 1_500.0), r(300.0, 2_000.0), r(400.0, 2_500.0), none, none),
+            prices = listOf(r(100.0, 800.0), r(200.0, 1_500.0), r(300.0, 2_000.0), r(400.0, 2_500.0), r(600.0, 3_500.0), none),
         ),
         Gem(
             id = "moonstone",
@@ -196,7 +196,7 @@ object Gems {
                 GemSign(Check.EYE, "Real moonstone's sheen moves and shows only at certain angles."),
                 GemSign(Check.LOUPE, "Gas bubbles or swirls: glass."),
             ),
-            prices = listOf(r(5.0, 40.0), r(7.0, 60.0), r(10.0, 100.0), r(20.0, 200.0), r(30.0, 300.0), none),
+            prices = listOf(r(5.0, 40.0), r(7.0, 60.0), r(10.0, 100.0), r(20.0, 200.0), r(30.0, 300.0), r(30.0, 300.0)),
         ),
         Gem(
             id = "hessonite",
@@ -206,7 +206,7 @@ object Gems {
                 GemSign(Check.LOUPE, "A wavy, \"heat haze\" look inside is typical of natural hessonite."),
                 GemSign(Check.LOUPE, "Gas bubbles and rounded facet edges: glass."),
             ),
-            prices = listOf(r(20.0, 150.0), r(50.0, 300.0), r(50.0, 300.0), r(50.0, 300.0), r(50.0, 300.0), none),
+            prices = listOf(r(20.0, 150.0), r(50.0, 300.0), r(50.0, 300.0), r(50.0, 300.0), r(50.0, 300.0), r(50.0, 300.0)),
         ),
         Gem(
             id = "zircon",
@@ -216,7 +216,7 @@ object Gems {
                 GemSign(Check.LOUPE, "Doubled facet edges seen through the top: zircon. Glass and cubic zirconia never show it."),
                 GemSign(Check.EYE, "Strong rainbow fire on a cheap \"zircon\": check it isn't cubic zirconia."),
             ),
-            prices = listOf(r(20.0, 150.0), r(50.0, 250.0), r(50.0, 300.0), r(50.0, 300.0), r(100.0, 500.0), none),
+            prices = listOf(r(20.0, 150.0), r(50.0, 250.0), r(50.0, 300.0), r(50.0, 300.0), r(100.0, 500.0), r(100.0, 500.0)),
         ),
         Gem(
             id = "topaz",
@@ -226,7 +226,7 @@ object Gems {
                 GemSign(Check.LOUPE, "Gas bubbles and rounded facet edges: glass."),
                 GemSign(Check.TOOL, "Topaz is sometimes sold as aquamarine or white sapphire. The NGJA lab separates them quickly."),
             ),
-            prices = listOf(none, none, none, none, none, none),
+            prices = listOf(r(3.0, 15.0), r(5.0, 20.0), r(5.0, 25.0), r(5.0, 30.0), r(5.0, 30.0), r(5.0, 40.0)),
         ),
         Gem(
             id = "tourmaline",
@@ -236,7 +236,18 @@ object Gems {
                 GemSign(Check.LOUPE, "Doubled facet edges in larger stones point to tourmaline; glass shows none."),
                 GemSign(Check.LOUPE, "Gas bubbles and swirls: glass."),
             ),
-            prices = listOf(none, none, none, none, none, none),
+            prices = listOf(r(20.0, 150.0), r(30.0, 250.0), r(40.0, 300.0), r(50.0, 400.0), r(60.0, 500.0), r(60.0, 500.0)),
+        ),
+        Gem(
+            id = "amethyst",
+            name = "Amethyst",
+            summary = "Purple quartz, found in Sri Lanka's gem gravels. Inexpensive; deep, even purple without brown or grey costs the most.",
+            signs = listOf(
+                GemSign(Check.EYE, "Patchy or banded purple is normal in natural amethyst. Perfectly even colour in a large, flawless stone may be lab-grown quartz."),
+                GemSign(Check.LOUPE, "Gas bubbles, swirls and rounded facet edges: glass."),
+                GemSign(Check.EYE, "Amethyst is cheap. A dealer pricing it like sapphire, or calling it \"purple sapphire\", is a warning sign. The NGJA lab separates them quickly."),
+            ),
+            prices = listOf(r(3.0, 15.0), r(5.0, 20.0), r(5.0, 25.0), r(5.0, 25.0), r(5.0, 30.0), r(5.0, 30.0)),
         ),
         Gem(
             id = "aquamarine",
@@ -246,7 +257,7 @@ object Gems {
                 GemSign(Check.TOOL, "Blue topaz and lab spinel are sold as aquamarine. A refractometer or the NGJA lab tells them apart."),
                 GemSign(Check.LOUPE, "Gas bubbles: glass or lab spinel."),
             ),
-            prices = listOf(none, none, none, none, none, none),
+            prices = listOf(r(20.0, 120.0), r(30.0, 250.0), r(40.0, 300.0), r(50.0, 400.0), r(60.0, 500.0), r(60.0, 500.0)),
         ),
     )
 
